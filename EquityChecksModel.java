@@ -130,7 +130,7 @@ public class EquityChecksModel extends DomBaseModel {
     private Boolean notifiedRequester0fSubmitted;
 
     @Column (name = "NOTIFY_REQUESTER_OF_RECEIVED", columnDefinition = "TINYINT")
-    private Boolean notifiedRequesterofReceived;
+    private Boolean notifiedRequesterOfReceivedStatus;
 
     @Column (name = "NOTIFY_REQUESTER_OF_COMPLETED", columnDefinition = "TINYINT")
     private Boolean notifiedRequesterOfCompleted;
@@ -156,6 +156,12 @@ public class EquityChecksModel extends DomBaseModel {
         joinColumns = @JoinColumn(name = "PARENT.ID", referencedColumnName = "ID"), 
         inverseJoinColumns = @JoinColumn(name = "CHILD ID", referencedColumnName = "ID")) 
     private Set<RefIdam> collaborationStakeholders; 
+
+    @ManyToMany(cascade = CascadeType.ALL) 
+    @JoinTable(name = "join_equity_checks_to_field_station_pocs_and_desk_officers", 
+        joinColumns = @JoinColumn(name = "PARENT.ID", referencedColumnName = "ID"), 
+        inverseJoinColumns = @JoinColumn(name = "CHILD ID", referencedColumnName = "ID")) 
+    private Set<RefIdam> fieldStationPOCsAndDeskOfficers; 
 
     @OneToOne(mappedBy = "equityCheck", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private EquityChecksSearchHelp equityChecksSearchHelp; 
@@ -199,8 +205,6 @@ public class EquityChecksModel extends DomBaseModel {
     public void setHasEverBeenSaved (Boolean hasEverBeenSaved) {
         this.hasEverBeenSaved = hasEverBeenSaved;
     }
-
-    
 
     public String getLabel () {
         return "Create/Edit Equity Check";
@@ -430,11 +434,11 @@ public Set<DomReference> getFieldStationList() {
 public void setFieldStationList(Set<DomReference> fieldStationList) {
     this.fieldStationList = fieldStationList;
 }
-public Boolean getNotifiedRequesterOfReceived() {
-    return notifiedRequesterOfReceived;
+public Boolean getnotifiedRequesterOfReceivedStatus() {
+    return notifiedRequesterOfReceivedStatus;
 }
-public void setNotifiedRequesterOfReceived(Boolean notifiedRequesterOfReceived) {
-    this.notifiedRequesterOfReceived = notifiedRequesterOfReceived;
+public void setnotifiedRequesterOfReceivedStatus(Boolean notifiedRequesterOfReceivedStatus) {
+    this.notifiedRequesterOfReceivedStatus = notifiedRequesterOfReceivedStatus;
 }
 public Set<RefIdam> getCollaborationStakeholders() {
     return collaborationStakeholders;

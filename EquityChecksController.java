@@ -36,7 +36,8 @@ import gov.cia.americano.security.LatteUser;
 @Controller
 @RequestMapping("/equity") 
 public class EquityChecksController extends DomBaseController { 
- 
+    private static final String NOTIFICATION = "notification";
+    private static final String HAS_DRAFT = "hasDraft"; 
     private final EquityCheckActionService actionService; 
  
     @Autowired 
@@ -45,33 +46,33 @@ public class EquityChecksController extends DomBaseController {
     } 
  
     @RequestMapping("/") 
-    public String listPage(HttpServletRequest request) { 
-        LatteUser latteUser = getLatteUser(request); 
+public String listPage(HttpServletRequest request) { 
+    LatteUser latteUser = getCurrentUser(request); 
  
-        // If this path was redirected to via a save, set the save success/failed notification as a request attribute 
-        HttpSession session = request.getSession(); 
-        if (session.getAttribute("notification") != null) { 
-            request.setAttribute("notification", session.getAttribute("notification")); 
-        } 
-        session.removeAttribute("notification"); 
- 
-        if (!donUserAccessService.hasAnyRole(latteUser)) { 
-            return actionService.noAccess(request, latteUser); 
-        } 
- 
-        return actionService.listPage(request, latteUser); 
+    // If this path was redirected to via a save, set the save success/failed notification as a request attribute 
+    HttpSession session = request.getSession(); 
+    if (session.getAttribute(NOTIFICATION) != null) { 
+        request.setAttribute(NOTIFICATION, session.getAttribute(NOTIFICATION)); 
     } 
+    session.removeAttribute(NOTIFICATION); 
+ 
+    if (!donUserAccessService.hasAnyRole(latteUser)) { 
+        return actionService.noAccess(request, latteUser); 
+    } 
+ 
+    return actionService.listPage(request, latteUser); 
+}
  
     @RequestMapping("/myrequests") 
     public String myRequestsPage(HttpServletRequest request) { 
-        LatteUser latteUser = getLatteUser(request); 
+        LatteUser latteUser = getCurrentUser(request); 
  
         // If this path was redirected to via a save, set the save success/failed notification as a request attribute 
         HttpSession session = request.getSession(); 
-        if (session.getAttribute("notification") != null) { 
-            request.setAttribute("notification", session.getAttribute("notification")); 
+        if (session.getAttribute(NOTIFICATION) != null) { 
+            request.setAttribute(NOTIFICATION, session.getAttribute(NOTIFICATION)); 
         } 
-        session.removeAttribute("notification"); 
+        session.removeAttribute(NOTIFICATION); 
  
         // TODO: to update the permission check to equity users once that LDAP roles are created 
         if (!domUserAccessService.hasAnyRole(latteUser)) { 
@@ -83,7 +84,7 @@ public class EquityChecksController extends DomBaseController {
  
     @RequestMapping("/create") 
     public String createPage(HttpServletRequest request) { 
-        LatteUser latteUser = getLatteUser(request); 
+        LatteUser latteUser = getCurrentUser(request); 
 
         if (!domUserAccessService.canCreateEquityCheck(latteUser)) { 
             return actionService.createPageNoAccess(latteUser); 
@@ -95,9 +96,10 @@ public class EquityChecksController extends DomBaseController {
     @RequestMapping(value = { "/view/{id}", "/view/{id}/{searchId}" }) 
     public String viewEquityCheck(HttpServletRequest request, @PathVariable Long id, 
             @PathVariable(required = false) String searchId) { 
-        LatteUser latteUser = getLatteUser(request); 
+        LatteUser latteUser = getCurrentUser(request); 
 
         if (!domUserAccessService.canViewEquityCheck(latteUser)) { 
+            logger.info("User {} denied access to view equity check {}", latteUser.getUsername(), id);
             return actionService.viewPageNoAccess(request, latteUser); 
         } 
 
@@ -106,68 +108,85 @@ public class EquityChecksController extends DomBaseController {
 
     @RequestMapping(value = { "/edit/{id}", "/edit/{id}/{searchId}", "/myrequests/edit"})
     public String editPage(HttpServletRequest request, @PathVariable Long id, @PathVariable(required = false) String searchId) { 
-        LatteUser latteUser = getLatteUser(request); 
-        String username = getCurrentUser(request); 
-        List<EquityChecksModel> checksList = actionService.findDraftsByUser(username); 
+        LatteUser latteUser = getCurrentUser(request); 
+        List<EquityChecksModel> checksList = actionService.findDraftsByUser(latteUser.getUsername()); 
         Optional<EquityChecksModel> isOwned = checksList.stream()
                                             .filter(check -> check.getId().equals(id))
                                             .findFirst(); 
-        if (isOwned.isPresent() && !domUserAccessService.canEditEquityCheck(latteUser)) { 
+        if (isOwned.isPresent() && !domUserAccessService.canEditEquityCheck(latteUser)) {
+            logger.info("User {} denied access to edit equity check {}", latteUser.getUsername(), id);  
             return actionService.editPageNoAccess(request, latteUser); 
         } 
         return actionService.edit(request, id, searchId, latteUser); 
     } 
+    
     @PostMapping("/save/draft") 
     public ResponseEntity<EquityChecksModel> saveAsDraft(@RequestBody @Valid EquityChecksForm equityChecksForm, HttpServletRequest request) { 
-        LatteUser latteUser = getLatteUser(request); 
+        LatteUser latteUser = getCurrentUser(request); 
         EquityChecksModel equityCheck = actionService.saveAsDraft(request, equityChecksForm, latteUser); 
         return new ResponseEntity<>(equityCheck, HttpStatus.CREATED); 
     } 
+    
     @PostMapping("/save/submit") 
     public ResponseEntity<EquityChecksModel> submitNewCheck(@RequestBody @Valid EquityChecksForm equityChecksForm, HttpServletRequest request) { 
-        LatteUser latteUser = getLatteUser(request); 
+        LatteUser latteUser = getCurrentUser(request); 
         EquityChecksModel equityCheck = actionService.submitNewCheck(equityChecksForm, latteUser); 
         return new ResponseEntity<>(equityCheck, HttpStatus.CREATED); 
-    } 
+    }
+
     @PutMapping("/save/update/{id}") 
     public ResponseEntity<EquityChecksModel> updateExistingCheck(@PathVariable Long id, @RequestBody @Valid EquityChecksForm equityChecksForm, HttpServletRequest request) { 
-        LatteUser latteUser = getLatteUser(request); 
+        LatteUser latteUser = getCurrentUser(request); 
         EquityChecksModel equityCheck = actionService.updateExistingCheck(id, equityChecksForm, latteUser); 
         return new ResponseEntity<>(equityCheck, HttpStatus.OK); 
     } 
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleGeneralException(Exception ex) {
+        logger.error("General exception occurred", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Internal server error. Please try again later.");
+    }
+
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class) 
     public ResponseEntity<String> handleOptimisticLockingFailure() { 
         return ResponseEntity.status(HttpStatus.CONFLICT)
                             .body("The data you were trying to update has been modified by another user. Please retry your action."); 
     } 
+
     @RequestMapping(value="/checkDraft", method=RequestMethod.GET) 
-    @ResponseBody 
-    public Map<String, Object> checkDraft(Principal principal) { 
-        Map<String, Object> response = new HashMap<>();
-        String currentUser = principal.getName(); 
-        try { 
-            EquityChecksModel latestDraft = actionService.getLatestDraftForUser(currentUser); 
-            if (latestDraft != null) { 
-                response.put("hasDraft", true); 
-                response.put("latestDraftId", latestDraft.getId()); 
-            } else { 
-                response.put("hasDraft", false); 
-            } 
-            return response; 
-        } catch (NonUniqueResultException ex) { 
-            response.put("hasDraft", true); 
-            return response; 
-        } catch (IndexOutOfBoundsException ex) { 
-            response.put("hasDraft", false); 
-            return response; 
+@ResponseBody 
+public Map<String, Object> checkDraft(Principal principal) { 
+    Map<String, Object> response = new HashMap<>();
+    String currentUser = principal.getName(); 
+    try { 
+        EquityChecksModel latestDraft = actionService.getLatestDraftForUser(currentUser); 
+        if (latestDraft != null) { 
+            response.put(HAS_DRAFT, true); 
+            response.put("latestDraftId", latestDraft.getId()); 
+        } else { 
+            response.put(HAS_DRAFT, false); 
         } 
+        return response; 
+    } catch (NonUniqueResultException ex) { 
+        response.put(HAS_DRAFT, true); 
+        return response; 
+    } catch (IndexOutOfBoundsException ex) { 
+        response.put(HAS_DRAFT, false); 
+        return response; 
     } 
+}
     @DeleteMapping("/deleteDraft/{equityCheckId}") 
-    public ResponseEntity<Void> deleteDraft(@PathVariable Long equityCheckId, @RequestBody Map<String, Object> request) { 
-        boolean deleteFromList = (boolean) request.get("deleteFromList"); 
+public ResponseEntity<Void> deleteDraft(@PathVariable Long equityCheckId, @RequestBody Map<String, Object> request) { 
+    boolean deleteFromList = (boolean) request.get("deleteFromList"); 
+    try {
         actionService.deleteDraft(equityCheckId, deleteFromList); 
-        return ResponseEntity.noContent().build(); 
-    } 
+    } catch (ObjectOptimisticLockingFailureException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body("The draft you were trying to delete has been modified by another user. Please refresh and retry the delete.");
+    }
+    return ResponseEntity.noContent().build(); 
+}
     @GetMapping("/drafts") 
     @ResponseBody 
     public List<EquityChecksModel> getDrafts(HttpServletRequest request) {
@@ -175,6 +194,7 @@ public class EquityChecksController extends DomBaseController {
         List<EquityChecksModel> test = actionService.findDraftsByUser(username); 
         return test; 
     }
+    
     public static String getCurrentUser(HttpServletRequest request) { 
         Principal principal = request.getUserPrincipal(); 
         if (principal != null) { 
