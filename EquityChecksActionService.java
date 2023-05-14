@@ -28,15 +28,15 @@ import gov.cia.americano.service.action.BaseActionService;
 
 // Service class for Equity Check Action
 public class EquityCheckActionService extends BaseActionService {
-     // Logger instance
+
     private static final Logger log = LogManager.getLogger(EquityCheckActionService.class);
-     // Page constants
+
     private static final String PAGE_INDEX = "americano/pages/index";
     private static final String PAGE_LIST = "americano/pages/equityCheck/equityCheckList";
     private static final String PAGE_MY_REQUESTS = "americano/pages/equityCheck/equityCheckMyRequests";
     private static final String PAGE_CREATE = "americano/pages/equityCheck/equityCheckCreate";
     private static final String PAGE_VIEW = "americano/pages/equityCheck/equityCheckView";
-     // Attribute constants
+
     private static final String ATTR_EQUITY_CHECK_FORM = "equityCheck";
     private static final String ATTR_EQUITY_CHECK_OPERATION = "equityCheckOperation";
     private static final String NOTIFICATION = "notification";
@@ -46,7 +46,7 @@ public class EquityCheckActionService extends BaseActionService {
     private static final String ATTR_CAN_VIEW = "canViewEquityCheck";
     private static final String ATTR_CAN_CREATE = "canCreate EquityCheck";
     private static final String ATTR_CAN_DELETE = "canDeleteEquityCheck";
-     // Services
+
     private EquityChecksService equityCheckService;
     private DomRefDataService domRefDataService;
     private EquityCheckRefAndTagService refAndTagService;
@@ -63,12 +63,10 @@ public class EquityCheckActionService extends BaseActionService {
     }
     @Override 
     protected void setPageNotification(HttpServletRequest request, boolean isSuccess, String title, String message) {
-        // Set the notification attribute on the request object
         request.setAttribute(NOTIFICATION, new DomAjaxResponse(isSuccess, title, message, null));
     }
     @Override
     protected void setPageNotification(HttpServletRequest request, String title, String message, List<String> errors) {
-        // Set the notification attribute on the request object
         request.setAttribute(NOTIFICATION, new DomAjaxResponse(false, title, message, errors));
     }
     @Override 
@@ -84,29 +82,29 @@ public class EquityCheckActionService extends BaseActionService {
         this.refAndTagService = refAndTagService; 
     } 
 
-    public EquityCheckActionService () { } 
-
     @SuppressWarnings({ "unused" }) 
-    public String index (HttpServletRequest request, LatteUser latteUser) { 
+    public String displayHomePage (HttpServletRequest request, LatteUser latteUser) { 
         return PAGE_INDEX; 
     } 
     
     @SuppressWarnings({ "unused" }) 
-    public String noAccess (HttpServletRequest request, LatteUser latteUser) { 
+    public String showNoAccessPage (HttpServletRequest request, LatteUser latteUser) { 
         return NOT_AUTHORIZED; 
     }
 
-    public String listPage(HttpServletRequest request, LatteUser latteUser) { 
+    public void redirectWindup(HttpServletRequest request, LatteUser latteUser) {
         setPermissionAttributes(request, latteUser); 
         addReferenceDataTables(request); 
         searchTagsAndSetTagAttributes(request); 
+    }
+
+    public String listPage(HttpServletRequest request, LatteUser latteUser) { 
+        redirectWindup(request, latteUser);
         return PAGE_LIST; 
     }
 
     public String myRequestsPage(HttpServletRequest request, LatteUser latteUser) { 
-        setPermissionAttributes(request, latteUser); 
-        addReferenceDataTables(request); 
-        searchTagsAndSetTagAttributes(request); 
+        redirectWindup(request, latteUser);
         return PAGE_MY_REQUESTS; 
     } 
 
@@ -123,11 +121,6 @@ public class EquityCheckActionService extends BaseActionService {
     // TODO: Add code here to search for tags and set tag attributes
     }
     public void setPermissionAttributes (HttpServletRequest request, LatteUser latteUser) { 
-        final String ATTR_CAN_VIEW_INTERNAL_DUE_DATE = "canViewInternalDueDate";
-        final String ATTR_CAN_EDIT = "canEdit";
-        final String ATTR_CAN_VIEW = "canView";
-        final String ATTR_CAN_CREATE = "canCreate";
-        final String ATTR_CAN_DELETE = "canDelete";
         request.setAttribute(ATTR_CAN_VIEW_INTERNAL_DUE_DATE, latteUser.canViewEquityCheckInternalDueDate());
         request.setAttribute(ATTR_CAN_EDIT, latteUser.canEditEquityCheck());
         request.setAttribute(ATTR_CAN_VIEW, latteUser.canViewEquityCheck());
@@ -136,10 +129,9 @@ public class EquityCheckActionService extends BaseActionService {
     }
 
     public EquityChecksModel saveAsDraft (HttpServletRequest request, EquityChecksForm equityChecksForm, LatteUser latteUser) { 
-        // Create an EquityCheck object from the EquityChecks Form
+
         EquityChecksModel equityCheck = equityCheckService.createEquityCheck(equityChecksForm, latteUser, true); 
-        // Save the EquityCheck object    
-        // Log any errors that occur
+
         try { 
             return equityCheckService.saveEquityCheck(equityCheck, true); 
         } catch (Exception ex) { 
@@ -148,7 +140,7 @@ public class EquityCheckActionService extends BaseActionService {
         } 
     }
 
-    public void submitNewCheck(HttpServletRequest request, EquityChecksForm equityChecksForm, LatteUser latteUser) { 
+    public void submitNewCheck(HttpServletRequest request, EquityChecksForm equityChecksForm, LatteUser latteUser) throws CheckSubmissionException { 
     try {
         EquityChecksModel equityCheck = 
         equityCheckService.createEquityCheck(equityChecksForm, latteUser, 
@@ -156,26 +148,17 @@ public class EquityCheckActionService extends BaseActionService {
         equityCheckService.saveEquityCheck(equityCheck, false); 
     } catch (Exception ex) { 
         log.error("Error submitting new check", ex); 
+        throw new CheckSubmissionException("Error submitting new check", e);
     }
     }
 
-    public void updateExistingCheck (HttpServletRequest request, EquityChecksForm equityChecksForm, LatteUser latteUser) { 
-    try { 
-        EquityChecksModel equityCheck = 
-        equityCheckService.updateEquityCheck(equityChecksForm, latteUser); 
-        equityCheckService.saveEquityCheck(equityCheck, false); 
-    } catch (Exception ex) { 
-        log.error("Error updating existing check", ex); 
-    }
-    }
-
-    public void updateExistingCheck(HttpServletRequest request, EquityChecksForm equityChecksForm, LatteUser latteUser) {
+    public void updateExistingCheck(HttpServletRequest request, EquityChecksForm equityChecksForm, LatteUser latteUser) throws CheckUpdateException {
         try {
             EquityChecksModel equityCheck = equityCheckService.buildEquityCheck(equityChecksForm,latteÜser,null);
             equityCheckService.saveEquityCheck(equityCheck, false);
         } catch (Exception ex) {
             log.error ("Error updating existing check: " + ex.getMessage(), ex);
-            throw new RuntimeException(ex);
+            throw new CheckUpdateException("Error updating check", e);
         }
     }
     // The common code for each save action was moved into a separate method
@@ -194,7 +177,7 @@ public class EquityCheckActionService extends BaseActionService {
         setupSaveSuccessNotification(equityCheckToSave, request);
     }
     public void internalDueDateCheck (EquityChecksModel equityCheck, LatteUser latteUser) {
-        internalDueDateCheck(equityCheck, latteUser);
+        equityCheckService.internalDueDateCheck(equityCheck, latteUser);
     }
     public void statusUpdate (EquityChecksModel equityCheck, LatteUser latteUser, Boolean isDraft) {
         equityCheckService.statusUpdate(equityCheck, latteÜser, isDraft);
