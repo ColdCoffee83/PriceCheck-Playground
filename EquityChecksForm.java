@@ -9,6 +9,9 @@ import gov.cia.americano.model.ReflIdam;
 import gov.cia.americano.security.LatteUser;
 import gov.cia.americano.utils.CollectionUtils;
 
+/**
+ * Form used to save and update equity check data.
+ */ 
 public class EquityChecksForm extends DomBaseModel {
 // Variables related to attachments
 private Set<Long> attachmentsList = new HashSet<>();
