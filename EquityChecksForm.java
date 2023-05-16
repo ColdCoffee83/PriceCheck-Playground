@@ -87,13 +87,24 @@ public void saveEquityCheck (EquityChecksModel equityCheck, LatteUser latteUser)
      equityCheckRepository.save (equityCheck) ;
 }
 
-public void checkSearchHelp (EquityChecksModel equityCheck, LatteUser latteUser) {
-    EquityChecksSearchHelp searchHelp = equityCheck.getEquityChecksSearchHelp();
-    if (searchHelp == null) {
+public void checkSearchHelp(EquityChecksModel equityCheck, LatteUser latteUser) {
+    EquityChecksSearchHelp searchHelp;
+    if (equityCheck.getEquityChecksSearchHelp() == null) {
         searchHelp = new EquityChecksSearchHelp();
-        searchHelp.setCreatedInfo(latteUser);
-        searchHelp.setDeleted (false);
-        searchHelp.setEquityCheck (new EquityChecksModel (equityCheck.getId()));
+        equityCheck.setEquityChecksSearchHelp(searchHelp);
+    } else {
+        searchHelp = equityCheck.getEquityChecksSearchHelp();
+    }
+    searchHelp.setCreatedInfo(latteUser);
+    searchHelp.setDeleted(false);
+    searchHelp.setEquityCheck(equityCheck);
+    if (CollectionUtils.isNotEmpty(keywords)) {
+        String keys = String.join(",", keywords);
+        searchHelp.setKeywords(keys);
+    } else {
+        searchHelp.setKeywords(null);
+    }
+}
         equityCheck.setEquityChecksSearchHelp(searchHelp);
     }
     if (CollectionUtils.isNotEmpty (keywords)) {

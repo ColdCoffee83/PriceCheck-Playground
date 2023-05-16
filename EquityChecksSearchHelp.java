@@ -4,7 +4,7 @@
 public class EquityChecksSearchHelp extends DomBaseModel {
      @JsonIgnore
     @OneToOne (fetch = FetchType.LAZY)
-    @JoinColumn (name = "EQUITY CHECK NUMBER")
+    @JoinColumn (name = "EQUITY_CHECK_ID")
     private EquityChecksModel equityCheck;
      @Column (name = "KEYWORDS", columnDefinition = "text")
     private String keywords;
@@ -13,11 +13,18 @@ public class EquityChecksSearchHelp extends DomBaseModel {
      public EquityChecksModel getEquityCheck() {
         return this.equityCheck;
     }
-     public void setEquityCheck(EquityChecksModel equityCheck) {
+         public void setEquityCheck(EquityChecksModel equityCheck) {
+        if (equityCheck == null) {
+            return;
+        }
         this.equityCheck = equityCheck;
+        populateSearchHelpInEquityCheck(); // New line added
     }
-     public String getKeywords() {
-        return keywords;
+
+    private void populateSearchHelpInEquityCheck() {
+        if (this.equityCheck != null) {
+            this.equityCheck.setEquityChecksSearchHelp(this);
+        }
     }
      public void setKeywords (String keywords) {
         this.keywords = keywords;

@@ -4,7 +4,7 @@ public class EquityChecksStatusHistory {
 @GeneratedValue (strategy = GenerationType.IDENTITY)
 private Long id;
 @ManyToOne
-@JoinColumn (name = "EQUITY CHECK ID")
+@JoinColumn (name = "EQUITY_CHECK_ID")
 private EquityChecksModel equityCheck;
 @Column (name = "STATUS")
 private String status;
