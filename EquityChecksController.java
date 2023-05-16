@@ -40,10 +40,16 @@ public class EquityChecksController extends DomBaseController {
     private static final String HAS_DRAFT = "hasDraft"; 
     private final EquityCheckActionService actionService; 
  
-    @Autowired 
-    public EquityChecksController(EquityCheckActionService actionService) { 
+@Autowired 
+public EquityChecksController(EquityCheckActionService actionService) {
+    try {
         this.actionService = actionService; 
-    } 
+    } catch (Exception e) {
+        // Handle any exceptions thrown by the constructor
+        logger.error("Error occurred when initializing EquityCheckActionService", e);
+        throw new RuntimeException("Error occurred when initializing EquityCheckActionService", e);
+    }
+}
  
     @RequestMapping("/") 
 public String listPage(HttpServletRequest request) { 
@@ -57,8 +63,14 @@ public String listPage(HttpServletRequest request) {
     session.removeAttribute(NOTIFICATION); 
  
     if (!donUserAccessService.hasAnyRole(latteUser)) { 
+    try {
         return actionService.noAccess(request, latteUser); 
-    } 
+    } catch (Exception e) {
+        logger.error("Error occurred in EquityCheckActionService.noAccess method", e);
+        // Handle the exception appropriately, such as displaying an error message to the user.
+        return "errorPage";
+    }
+}
  
     return actionService.listPage(request, latteUser); 
 }
@@ -69,9 +81,15 @@ public String listPage(HttpServletRequest request) {
  
         // If this path was redirected to via a save, set the save success/failed notification as a request attribute 
         HttpSession session = request.getSession(); 
-        if (session.getAttribute(NOTIFICATION) != null) { 
-            request.setAttribute(NOTIFICATION, session.getAttribute(NOTIFICATION)); 
-        } 
+        if (!domUserAccessService.hasAnyRole(latteUser)) { 
+    try {
+        return actionService.noAccess(request, latteUser);
+    } catch (Exception e) {
+        logger.error("Error occurred in EquityCheckActionService.noAccess method", e);
+        // Handle the exception appropriately, such as displaying an error message to the user.
+        return "errorPage";
+    }
+}
         session.removeAttribute(NOTIFICATION); 
  
         // TODO: to update the permission check to equity users once that LDAP roles are created 
@@ -86,9 +104,16 @@ public String listPage(HttpServletRequest request) {
     public String createPage(HttpServletRequest request) { 
         LatteUser latteUser = getCurrentUser(request); 
 
-        if (!domUserAccessService.canCreateEquityCheck(latteUser)) { 
-            return actionService.createPageNoAccess(latteUser); 
-        } 
+       if (!domUserAccessService.canCreateEquityCheck(latteUser)) { 
+    try {
+        EquityChecksModel model = new EquityChecksModel();
+        return actionService.createPageNoAccess(latteUser);
+    } catch (Exception e) {
+        logger.error("Error occurred when initializing EquityChecksModel", e);
+        // Handle the exception appropriately, such as displaying an error message to the user.
+        return "errorPage";
+    }
+}
 
         return actionService.create(request, latteUser); 
     } 
@@ -126,20 +151,16 @@ public String listPage(HttpServletRequest request) {
         EquityChecksModel equityCheck = actionService.saveAsDraft(request, equityChecksForm, latteUser); 
         return new ResponseEntity<>(equityCheck, HttpStatus.CREATED); 
     } 
-    
-    @PostMapping("/save/submit") 
-    public ResponseEntity<EquityChecksModel> submitNewCheck(@RequestBody @Valid EquityChecksForm equityChecksForm, HttpServletRequest request) { 
-        LatteUser latteUser = getCurrentUser(request); 
-        EquityChecksModel equityCheck = actionService.submitNewCheck(equityChecksForm, latteUser); 
-        return new ResponseEntity<>(equityCheck, HttpStatus.CREATED); 
-    }
 
-    @PutMapping("/save/update/{id}") 
-    public ResponseEntity<EquityChecksModel> updateExistingCheck(@PathVariable Long id, @RequestBody @Valid EquityChecksForm equityChecksForm, HttpServletRequest request) { 
-        LatteUser latteUser = getCurrentUser(request); 
-        EquityChecksModel equityCheck = actionService.updateExistingCheck(id, equityChecksForm, latteUser); 
-        return new ResponseEntity<>(equityCheck, HttpStatus.OK); 
-    } 
+  @RequestMapping ("/save"
+    public void saveEquityCheckRequest (HttpServletRequest request,
+HttpServletResponse response, EquityChecksForm equityChecksForm) throws Exception 1
+LatteUser latteUser = getLatteUser (request);
+actionService. save (request, equityChecksForm, latteÜser);
+HttpSession session = request.getSession ();
+session.setAttribute (NOTIFICATION, "Equity check request saved successfully");
+  
+}
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGeneralException(Exception ex) {

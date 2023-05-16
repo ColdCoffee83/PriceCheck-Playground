@@ -3,6 +3,8 @@ import java.util.ArrayList;
 import java.util.List; 
 import java.util.Optional; 
 import java.util.stream.Collectors; 
+import java.io.IOException;
+import javax.mail.MessagingException;
 import javax.persistence.NonUniqueResultException; 
 import javax.servlet.http.HttpServletRequest; 
 import javax.transaction.Transactional; 

@@ -1,18 +1,22 @@
 // Import necessary packages
 import java.io.IOException;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.Zoneld;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
- import javax.mail.MessagingException;
+
+import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.NonUniqueResultException;
- import org.apache.logging.log4j.LogManager;
+
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,78 +24,105 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
- // Import repositories
+
 import gov.cia.americano.domestic.repository.EquityChecksFilterRepository;
 import gov.cia.americano.domestic.repository.EquityChecksRepository;
 import gov.cia.americano.domestic.repository.EquityChecksStatusHistoryRepository;
 import gov.cia.americano.domestic.repository.EquityChecksSearchHelpRepository;
- // Import services
+
 import gov.cia.americano.domestic.service.equityChecks.EquityChecksFieldSaveService;
- // Import models
 import gov.cia.americano.domesticmodel.ajaxrequest.EquityChecksSearch;
 import gov.cia.americano.domesticmodel.email.EmailNote;
 import gov.cia.americano.domesticmodel.equityChecks.EquityChecksModel;
 import gov.cia.americano.domesticmodel.equityChecks.EquityChecksSearchHelp;
 import gov.cia.americano.domesticmodel.equityChecks.EquityChecksStatusHistory;
 import gov.cia.americano.domesticmodel.form.EquityChecksForm;
- // Import views
+
 import gov.cia.americano.domesticview.EquityChecksListView;
- // Import enumerations
+
 import gov.cia.americano.enumeration.SALErrors;
- // Import other models
+
 import gov.cia.americano.model.RefIdam;
- // Import repositories
+
 import gov.cia.americano.repository.RefIdamRepository;
- // Import security
+
 import gov.cia.americano.security.LatteUser;
- // Import services
+
 import gov.cia.americano.service.SALService;
 
 @Service
- public class EquityChecksService {
-     static final Logger log = LogManager.getLogger (EquityChecksService.class);
-     @Value ("${APP_BASE_URL}")
-     private String appBaseUrl;
-     @Autowired
-     private EquityChecksRepository equityChecksRepository;
-     @Autowired
-     private EquityChecksStatusHistoryRepository statusHistoryRepository;
-     @Autowired
-     private EquityChecksSearchHelpRepository searchHelpRepository;
-     @Autowired
-     private EquityChecksFilterRepository filterRepo;
-     @Autowired
-     private EquityChecksFieldSaveService fieldService;
-     @Autowired
-     private EmailService emailService;
-     private static final String EQ_PREFIX = "EQUI-";
-     private RefIdamRepository refldamRepository;
+public class EquityChecksService {
+    static final Logger log = LogManager.getLogger(EquityChecksService.class);
 
+    @Value("${APP_BASE_URL}")
+    private String appBaseUrl;
+
+    @Autowired
+    private EquityChecksRepository equityChecksRepository;
+
+    @Autowired
+    private EquityChecksStatusHistoryRepository statusHistoryRepository;
+
+    @Autowired
+    private EquityChecksSearchHelpRepository searchHelpRepository;
+
+    @Autowired
+    private EquityChecksFilterRepository filterRepo;
+
+    @Autowired
+    private EquityChecksFieldSaveService fieldService;
+
+    @Autowired
+    private EmailService emailService;
+
+    private static final String EQ_PREFIX = "EQUI-";
+
+    private RefIdamRepository refldamRepository;
 
     // This method returns a list of EquityChecksListView objects based on the given parameters
-    public List<EquityChecksListView> getFilterEquityChecks (EquityChecksSearch search, Boolean viewingMyRequests, LatteUser latteUser) throws Exception { 
+    public List<EquityChecksListView> getFilterEquityChecks(EquityChecksSearch search, Boolean viewingMyRequests,
+            LatteUser latteUser) throws Exception {
         // Attempt to filter the EquityChecks based on the given parameters
-        return attemptFilterEquityChecks (search, viewingMyRequests, latteUser);
+        return attemptFilterEquityChecks(search, viewingMyRequests, latteUser);
     }
 
-    public List<EquityChecksListView> attemptFilterEquityChecks (EquityChecksSearch search, Boolean viewingMyRequests, LatteUser latteUser) throws Exception {
+    public List<EquityChecksListView> attemptFilterEquityChecks(EquityChecksSearch search, Boolean viewingMyRequests,
+            LatteUser latteUser) throws Exception {
         try {
-            return attemptFilter (search, viewingMyRequests, latteUser);
+            return attemptFilter(search, viewingMyRequests, latteUser);
         } catch (Exception e) {
             log.error(e);
             throw e;
         }
     }
 
-    private List<EquityChecksListView> attemptFilter (EquityChecksSearch search,
-    Boolean viewingMyRequests,
-    LatteUser latteUser) {
-        return filterRepo.filterEquityChecks (search, viewingMyRequests, latteUser);
+    private List<EquityChecksListView> attemptFilter(EquityChecksSearch search, Boolean viewingMyRequests,
+            LatteUser latteUser) {
+        return filterRepo.filterEquityChecks(search, viewingMyRequests, latteUser);
     }
-        
+
+    private EquityChecksModel createOrUpdateEquityCheck(EquityChecksForm eqForm, boolean isDraft,
+            LatteUser latteUser) throws Exception {
+        Optional<EquityChecksModel> dbEquityCheckRec = findEquityCheck(eqForm.getId());
+        EquityChecksModel equityCheck;
+        if (!dbEquityCheckRec.isPresent()) {
+            equityCheck = new EquityChecksModel();
+        } else {
+            equityCheck = dbEquityCheckRec.get();
+        }
+        eqForm.saveEquityCheck(equityCheck, latteUser);
+        eqForm.setAudit(equityCheck);
+        equityCheck.setDraft(isDraft);
+        // Here, we call the helper methods to save or update the EquityCheck
+        saveEquityChecksSearchHelp(equityCheck, latteUser);
+        equityCheck = equityChecksRepository.save(equityCheck);
+        createOrUpdateEquityCheckStatusHistory(equityCheck, eqForm.getStatus()); 
+    return equityCheck;
+}
+   
     public Optional<EquityChecksModel> validateAndSaveEquityCheck (EquityChecksForm eqForm, List<String> errors, LatteUser latteUser, boolean isDraft) {
         try {
-            return Optional.of(saveEquityCheck(egForm, latteUser, isDraft));
+            return Optional.of(createOrUpdateEquityCheck(egForm, latteUser, isDraft));
         } catch (IOException ex) {
             errors.add(SALErrors.INTERNAL_SAVE_ERROR.getValue());
             DomSALService.saveltemFailed(eqgForm,errors.get(0),latteUser);
@@ -116,12 +147,6 @@ import gov.cia.americano.service.SALService;
         } else {
             equityCheck = dbEquityCheckRec.get();
         }
-        if (isDraft) {
-            EquityChecksSearchHelp ecsh = new EquityChecksSearchHelp();
-            ecsh.setCreatedInfo(latteUser);
-            equityCheck.setEquityChecksSearchHelp(ecsh);
-            searchHelpRepository.save(ecsh);
-        }
         egForm.saveEquityCheck(equityCheck, latteUser);
         eqForm.setAudit(equityCheck);
         equityCheck = equityChecksRepository.save(equityCheck);
@@ -131,6 +156,47 @@ import gov.cia.americano.service.SALService;
         return equityCheck;
     }
 
+// This method saves or updates an EquityChecksSearchHelp for the given EquityChecksModel
+private void saveEquityChecksSearchHelp(EquityChecksModel equityCheck, LatteUser latteUser) throws Exception {
+    // If the equity check already has a search help, update it
+    if (equityCheck.getEquityChecksSearchHelp() == null) {
+        // If the equity check does not have a search help, create a new one and save it
+        EquityChecksSearchHelp ecsh = new EquityChecksSearchHelp();
+        ecsh.setCreatedInfo(latteUser);
+        equityCheck.setEquityChecksSearchHelp(ecsh);
+    }
+}
+
+// This method creates or updates an equity check status history entry for the given equity check and new status
+private void createOrUpdateEquityCheckStatusHistory(EquityChecksModel equityCheck, String newStatus) {
+    // Get the latest equity check status history for this equity check
+    Optional<EquityChecksStatusHistory> latestHistoryOptional = statusHistoryRepository.findFirstByEquityCheckOrderByTimestampDesc(equityCheck);
+
+    // If there is no latest history, create a new one for the new status
+    if (!latestHistoryOptional.isPresent()) {
+        EquityChecksStatusHistory newHistory = new EquityChecksStatusHistory();
+        newHistory.setStatus(newStatus);
+        newHistory.setTimestamp (new Date ());
+        newHistory.setEquityCheck(equityCheck);
+        statusHistoryRepository.save(newHistory);
+    } else {
+        EquityChecksStatusHistory latestHistory = latestHistoryOptional.get();
+        String oldStatus = latestHistory.getStatus();
+        if (!newStatus.equals(oldStatus)) {
+            // If the old status is not equal to the new status, create a new history entry for the new status
+            EquityChecksStatusHistory newHistory = new EquityChecksStatusHistory();
+            newHistory.setStatus(newStatus);
+            newHistory.setTimestamp(new Date());
+            newHistory.setEquityCheck(equityCheck);
+            statusHistoryRepository.save(newHistory);
+        } else {
+            // If the old status is equal to the new status, update the status date of the latest history entry
+            latestHistory.setTimestamp(new Date());
+            statusHistoryRepository.save(latestHistory);
+        }
+    }
+}
+   
     public Optional<EquityChecksModel> findEquityCheckById (Long id) {
         return findEquityCheck (id, false);
     }
@@ -139,20 +205,29 @@ import gov.cia.americano.service.SALService;
     }
 
     private Optional<EquityChecksModel> findEquityCheck(Long id, boolean includeDeleted) {
-        Optional<EquityChecksModel> equityCheck;
-        try {
-            equityCheck = equityChecksRepository.findById(id);
-        } catch (Exception ex) {
-            return Optional.empty();
-        }
-        if (!equityCheck.isPresent()) {
-            return Optional.empty();
-        }
-        if (!includeDeleted && equityCheck.get().getDeleted()) {
-            return Optional.empty();
-        }
-        return equityCheck;
+    Optional<EquityChecksModel> equityCheck;
+    try {
+        equityCheck = equityChecksRepository.findById(id);
+    } catch (Exception ex) {
+        ex.printStackTrace();
+        log.error(ex);
+        return Optional.empty();
     }
+    
+    if (!equityCheck.isPresent()) {
+        String error = "There was an error retrieving an equity check request: " + "The equity check with id '" + id + "' does not exist.";
+        log.error(error);
+        return Optional.empty();
+    }
+    
+    if (!includeDeleted && equityCheck.get().getDeleted()) {
+        String error = "There was an error retrieving an equity check request: " + "The equity check with id '" + id + "' was deleted.";
+        log.error(error);
+        return Optional.empty();
+    }
+    
+    return equityCheck;
+}
 
     public EquityChecksModel getNewestRequest() {
         return equityChecksRepository.getNewestEquityCheck();
@@ -160,12 +235,14 @@ import gov.cia.americano.service.SALService;
 
     @Transactional
     public EquityChecksModel createNewRequest(LatteUser latteUser) {       
-        EquityChecksModel saved = savedInit(latteUser);       
-        EquityChecksSearchHelp searchHelp = saved.getEquityChecksSearchHelp();
-        searchHelp = searchHelpRepository.save(searchHelp);
-        saved.setEquityChecksSearchHelp(searchHelp);
+        EquityChecksModel saved = savedInit(latteUser);    
         saved = insertOrUpdateEquityCheck(saved, latteUser, false);
-        statusHistoryRepository.updateStatusHistory(saved, "Draft");
+        EquityChecksStatusHistory newstatus = new EquityChecksStatusHistoryl);
+newStatus.setStatus ("Draft");
+newStatus.setEquityCheck (saved);
+newStatus.setTimestamp(new Date());
+statusHistoryRepository.save(newStatus);
+
         saved.setEquiNumber(EQ_PREFIX + saved.getId());
         return setSavedEquityCheckNumbers(saved);
     }
@@ -174,7 +251,7 @@ import gov.cia.americano.service.SALService;
         EquityChecksModel saved = new EquityChecksModel ();
         EquityChecksSearchHelp ecsh = new EquityChecksSearchHelp();
         ecsh.setCreatedInfo(latteUser);
-        saved. setEquityChecksSearchHelp (ecsh);
+        saved.setEquityChecksSearchHelp(ecsh);
         RefIdam currentUser = fieldService.saveOfficer(new RefIdam(latteUser), latteUser);
         saved.setOfficePOC(currentUser);
         return saved;
@@ -237,9 +314,18 @@ import gov.cia.americano.service.SALService;
     public void updateStatusAndNotifyRequester (EquityChecksModel equityCheck, LatteUser latteUser, String status) {
         equityCheck.setStatus(status);
         statusHistoryRepository.updateStatusHistory(equityCheck, status);
-        if (isNotificationRequired(equityCheck, status)) {
-            sendNotificationBasedOnStatus (equityCheck, latteUser, status);
-        }
+        try {
+if (isNotificationRequired(equitycheck,status))(
+sendNotificationBasedOnStatus(equityCheck, latteÜser, status);
+}
+) catch (IOException | MessagingException e) I
+log.error ("Failed attempt to notify requester of received requested"); log.error (e.getMessage ()); e.printStackTrace () ;
+EquityChecksStatusHistory newStatus = new EquityChecksStatusHistory ();
+newStatus.setStatus (status);
+newStatus.setTimestamp (new Date ()); newStatus. setEquityCheck (equityCheck); statusHistoryRepository.save (newStatus);
+if (isNotificationRequired(equityCheck, status)) |
+sendNotificationBasedOnStatus(equityCheck,latteUser,status);
+
     }
 
     private boolean isNotificationRequired(EquityChecksModel equityCheck, String status) {
@@ -351,7 +437,7 @@ String status) throws AddressException, IOException, MessagingException {
     }
 
     public List<EquityChecksStatusHistory> getStatusHistory (Long equityCheckId) {
-        return statusHistoryRepository.getStatusHistory(equityCheckId);
+        return statusHistoryRepository.findAllByEquityCheck_IdOrderByTimestampDesc(equityCheckId);
     }
 
     public EquityChecksModel getLatestDraftForUser (String currentUser) {
@@ -369,7 +455,7 @@ String status) throws AddressException, IOException, MessagingException {
         if (equityChecksRepository.getRemoveableStatus(equityCheckId) >= 1 ||
         fromDraftList) {
             // delete the equity check draft status history
-            statusHistoryRepository.deleteByEquityCheckId (equityCheckId);
+            statusHistoryRepository.deleteByEquityCheck_Id (equityCheckId);
             // delete the search help (wont be needed)
             searchHelpRepository.deleteByEquityCheckId(equityCheckId) ;
             // delete the equity check draft itself
@@ -454,13 +540,12 @@ String status) throws AddressException, IOException, MessagingException {
         EquityChecksModel equityCheck = new EquityChecksModel();
         eqForm.saveEquityCheck(equityCheck, latteUser);
         eqForm.setAudit(equityCheck);
-        equityCheck = equityChecksRepository.save(equityCheck);
-        EquityChecksSearchHelp searchHelp = new EquityChecksSearchHelp();
-        searchHelp.setCreatedInfo(latteUser);
-        searchHelp = searchHelpRepository.save(searchHelp);
-        equityCheck.setEquityChecksSearchHelp(searchHelp);
-        equityChecksRepository.save(equityCheck);
-        statusHistoryRepository.updateStatusHistory(equityCheck, isDraft ? "Draft" : "Submitted");
+        equityCheck = equityChecksRepository.save(equityCheck);        
+        EquityChecksStatusHistory statusHistory = new EquityChecksStatusHistory ();
+statusHistory. setEquityCheck (equityCheck);
+statusHistory. setStatus (isDraft ? "Draft" : "Submitted"); statusHistory.setTimestamp(new Date ());
+statusHistoryRepository.save (statusHistory);
+
         return equityCheck;
     }
 
@@ -474,7 +559,11 @@ String status) throws AddressException, IOException, MessagingException {
         eqForm.saveEquityCheck (equityCheck, latteUser);
         eqForm.setAudit (equityCheck) ;
         equityCheck = equityChecksRepository.save (equityCheck);
-        statusHistoryRepository.updateStatusHistory(equityCheck, isDraft ? "Draft" : equityCheck.getStatus());
+        EquityChecksStatusHistory statusHittory= new EquityChecksStatusHistory);
+statusHistory.setEquityCheck (equitycheck);
+statusHistory.setStatus (isDraft ? "Draft" : "Submitted"); statusHistory.setTimestamp (new Date ());
+statusHistoryRepository.save (statusHistory);
+
         return equityCheck;
     }
 }
