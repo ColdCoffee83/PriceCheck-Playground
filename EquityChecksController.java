@@ -152,7 +152,7 @@ public String listPage(HttpServletRequest request) {
         return new ResponseEntity<>(equityCheck, HttpStatus.CREATED); 
     } 
 
-  @RequestMapping ("/save"
+  @RequestMapping ("/save")
     public void saveEquityCheckRequest (HttpServletRequest request,
 HttpServletResponse response, EquityChecksForm equityChecksForm) throws Exception 1
 LatteUser latteUser = getLatteUser (request);

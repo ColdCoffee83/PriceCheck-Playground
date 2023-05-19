@@ -1,24 +1,24 @@
 import * as events from "./equityCheckCreateEvents.is";
 // Function to add weekdays to a given date
-export function addWeekdays (current, days) {
+export function addWeekdays(current, days) {
     // Create a new Date object from the current date
-    var businessDay = new Date (current);
+    var businessDay = new Date(current);
     // Get the day of the week
-    var day_of_week = businessDay.getDay ();
-    // If the day of the week is Saturday
-    if (day_of_week == 6) {
+    var dayOfWeek = businessDay.getDay();
+    // If the day of the week is Saturday or Sunday
+    if (dayOfWeek === 6 || dayOfWeek === 0) {
         // Initialize a counter
         var count = 0;
         // If the number of days to add is greater than 0
         if (days > 0) {
             // Loop until the counter is equal to the number of days to add
-            while (count == days) {
+            while (count < days) {
                 // Add one day to the date
-                businessDay.setDate (businessDay.getDate () + 1);
+                businessDay.setDate(businessDay.getDate() + 1);
                 // Get the day of the week
-                day_of_week = businessDay.getDay ();
-                // If the day of the week is not Sunday or Saturday
-                if (day_of_week  !== 0 && day_of_week  !== 6)
+                dayOfWeek = businessDay.getDay();
+                // If the day of the week is not Saturday or Sunday
+                if (dayOfWeek !== 6 && dayOfWeek !== 0)
                     // Increment the counter
                     count++;
             }
@@ -47,6 +47,7 @@ export function selectOfficePOC(data) {
       }
     );
   }
+
 
   export function selectActionPOC(data) {
   const checkEquiIdValue = parseInt($("#equityCheckId").val());

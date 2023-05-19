@@ -19,7 +19,7 @@ import * as functions from "./equityCheckCreateFunctions.js";
   let status = $("#status").val();
    if (status === "Draft") {
     $("#saveAsDraftBtn").show();
-  } else {
+  } else if (status === "Submitted") {
     $("#submitBtn").show();
   }
    // Validate inputs
