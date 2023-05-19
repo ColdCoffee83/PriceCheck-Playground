@@ -375,7 +375,24 @@ sendNotificationBasedOnStatus(equityCheck,latteUser,status);
 
     public void notifyRequester (EquityChecksModel equityCheck, LatteUser latteUser,
 String status) throws AddressException, IOException, MessagingException {
-        Optional<RefIdam> person = refIdamRepository.findById(equityCheck.getOfficePOC().getId());
+      boolean shouldNotify = false;
+    switch (status) {
+        case "Submitted":
+            shouldNotify = equityCheck.getNotifiedOfSubmitted() == null || !equityCheck.getNotifiedOfSubmitted();
+            break;
+        case "Received":
+            shouldNotify = equityCheck.getNotifiedOfReceived() == null || !equityCheck.getNotifiedOfReceived();
+            break;
+        case "Completed":
+            shouldNotify = equityCheck.getNotifiedOfCompleted() == null || !equityCheck.getNotifiedOfCompleted();
+            break;
+        default:
+            throw new IllegalArgumentException("Invalid status provided");
+    }
+
+      if (shouldNotify) {
+        try {
+          Optional<RefIdam> person = refIdamRepository.findById(equityCheck.getOfficePOC().getId());
         String ain = person.orElseThrow(() -> new IllegalStateException("Person not found")).getAin();
         String recipient = ain + "@cia.ic.gov";
         String subject;
@@ -422,6 +439,22 @@ String status) throws AddressException, IOException, MessagingException {
         EmailNote emailToSend = new EmailNote(recipient, subject, classification);
         emailToSend.setHtml(htmlBody);
         emailService.sendEmail(emailToSend, latteUser);
+          switch (status) {
+                case "Submitted":
+                    equityCheck.setNotifiedRequesterOfSubmitted(true);
+                    break;
+                case "Received":
+                    equityCheck.setNotifiedRequesterOfReceived(true);
+                    break;
+                case "Completed":
+                    equityCheck.setNotifiedRequesterOfCompleted(true);
+                    break;
+            }
+        } catch (IOException, MessagingException e) {
+          log.error("Failed attempt to notify requester");
+          log.error(e.getMessage());
+        }          
+        
     }
 
     public EquityChecksFilterRepository getFilterRepository() {
@@ -512,13 +545,12 @@ String status) throws AddressException, IOException, MessagingException {
         String classification = "UNCLASSIFIED//AIUO";
         String collaborationURL = appBaseUrl + "/equity/view/" + equityCheckId;
         EmailNote emailToSend = new EmailNote (to, subject, classification);
-        String html = "<head><meta charset='UTF-8'>"
-            + "</head><body style='font-family: Arial, sans-serlf; font-size: 14px; '><div style='padding: 20px; background-color: #F5F5F5;'>"
-            + "<hl style='font-size: 20px;'>Equity Check Collaboration</h1>"
+        String htmlBody = "<body style='font-family: Arial, sans-serlf; font-size: 14px; '><div style='padding: 20px; background-color: #F5F5F5;'>"
+            + "<hl style='font-size: px;'>Equity Check Collaboration</h1>"
             + "<p>The Corporate Vetting Cell (CVC) is requesting your  collaboration with the equity check linked below. Please review the details within. If you have any questions about equity check process, please send an email to T2MC_EQUITY CELL. Thank you.<br><br>CVC</p>"
             + "<p><a href='" + collaborationURL + "'>" + collaborationURL + "</a></p>" + "</div>";
            
-        emailToSend.setHtml (html);
+        emailToSend.setHtml (htmlBody);
 
         try {
             emailService.sendEmail (emailToSend, latteUser);

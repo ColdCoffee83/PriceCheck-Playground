@@ -35,39 +35,64 @@ export function submitBtnClickHandler() {
     return false;
   }
   export function showStatusHistoryClickHandler(checkEquiIdValue) {
-    $.ajax({
-      type: "GET",
-      url: appContext + "/ajax/americano/equityCheck/statusHistory",
-      data: { equityCheckId: checkEquiIdValue },
-      dataType: "json",
-      success: function(data) {
-        var html = `
-          <div class="modal-body">
-            <table id="statusHistoryTbl" class="table table-bordered">
-              <thead>
-                <tr>
-                  <th>Status</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${data.map(function(row) {
-                  return `
-                    <tr>
-                      <td>${row.status}</td>
-                      <td>${row.date}</td>
-                    </tr>
-                  `;
-                }).join("")}
-              </tbody>
-            </table>
-          </div>
-        `;
-        dialogUtil.showInfoNoForm(
-          "Status History",
-          html,
-          function() {
-            // TODO: Handle close event
+      const newOrder = ["Draft", "Submitted", "Received", "Processing", "In Coordination", "Completed"];
+
+  $.ajax({
+    type: "GET",
+    url: appContext + "/ajax/americano/equityCheck/statusHistory",
+    data: { equityCheckId: checkEquiIdValue },
+    dataType: "json",
+    
+    success: function(data) {
+      // Filter the entries based on the order we want.
+      const ordered = data.filter(row => newOrder.includes(row.status));
+      
+      // Find the latest status based on the status groups
+      const groups = ordered.reduce((acc, cur) => {
+        let status = cur.status;
+        if (acc[status]) {
+          if (new Date(cur.date) >= new Date(acc[status].date)) {
+            acc[status] = cur;
+          }
+          return acc;
+        }
+        acc[status] = cur;
+        return acc;
+      }, {});
+
+      // Create an array of objects with 'status' and latest 'date' fields arranged in the desired order.
+      const result = newOrder.map(status => {
+        let entry = { status }
+        if (groups[status]) {          
+          
+          entry.date = groups[status].timestamp;
+        } else {
+          entry.date = ""
+        }
+        return entry;
+      })
+
+      // Prepare the HTML to render the table.
+      const html = `
+        <div class="table-responsive table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${result.map(({status, date}) => `<tr><td>${status}</td><td>${date}</td></tr>`).join('\n')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      
+      // Render the table using 'dialogUtil.showInfoNoForm' method
+      dialogUtil.showInfoNoForm( "Status History", html, function() {
+        var statusHistoryTable = $("#statusHistoryTbl");
+        statusHistoryTable.DataTable({"dom": "t"});
           }
         );
       }
