@@ -75,9 +75,12 @@ public class EquityChecksService {
     @Autowired
     private EmailService emailService;
 
-    private static final String EQ_PREFIX = "EQUI-";
-
+@Autowired
     private RefIdamRepository refldamRepository;
+  
+    private static final String EQ_PREFIX = "EQUI-";
+  
+    
 
     // This method returns a list of EquityChecksListView objects based on the given parameters
     public List<EquityChecksListView> getFilterEquityChecks(EquityChecksSearch search, Boolean viewingMyRequests,

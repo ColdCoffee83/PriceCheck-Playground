@@ -413,9 +413,22 @@ public void setProposedEngagementDate(Long proposedEngagementDate) {
     public void setEquiNumber(String equiNumber) {
         this.equiNumber = equiNumber;
     }
-    public void setEquityChecksSearchHelp(EquityChecksSearchHelp ecsh) {
-        this.equityChecksSearchHelp = ecsh;
+ 
+ public void setEquityChecksSearchHelp(EquityChecksSearchHelp equityChecksSearchHelp) {
+    if (equityChecksSearchHelp == null) {
+        return;
     }
+    this.equityChecksSearchHelp = equityChecksSearchHelp;
+    populateEquityCheckInSearchHelp(); // New line added
+}
+
+private void populateEquityCheckInSearchHelp() {
+    if (this.equityChecksSearchHelp != null) {
+        this.equityChecksSearchHelp.setEquityCheck(this);
+    }
+}
+
+  
     public EquityChecksSearchHelp getEquityChecksSearchHelp() {
         return equityChecksSearchHelp;
     }

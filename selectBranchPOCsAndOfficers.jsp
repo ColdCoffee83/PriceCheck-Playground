@@ -10,9 +10,9 @@
         <input type="text" class="form-control personSearchField" id="pocLastNameSearch" name="pocLastNameSearch" placeholder="Last Name">
       </div>
     </div>
-    <div id="searchBranchPOCsAndOfficersContainer">
+    <div id="searchfieldStationPOCsAndOfficersContainer">
       <div class="form-group" id="searchResultsContainer">
-        <table id="searchBranchPOCsAndOfficersTbl" class="table table-bordered">
+        <table id="searchfieldStationPOCsAndOfficersTbl" class="table table-bordered">
           <thead>
             <tr>
               <th>Name</th>
@@ -23,15 +23,15 @@
           <tbody></tbody>
         </table>
       </div>
-      <div class="form-group" id="selectedBranchPOCsContainer">
-        <label for="branchPOCsList">Selected Branch POCs</label>
-        <ul id="branchPOCsList" class="list-group"></ul>
+      <div class="form-group" id="selectedfieldStationPOCsContainer">
+        <label for="fieldStationPOCsList">Selected fieldStation POCs</label>
+        <ul id="fieldStationPOCsList" class="list-group"></ul>
       </div>
       <div class="form-group" id="selectedOfficersContainer">
-        <label for="officersList">Selected Branch Officers</label>
+        <label for="officersList">Selected fieldStation Officers</label>
         <ul id="officersList" class="list-group"></ul>
       </div>
-      <button id="saveBranchPOCsAndOfficersBtn" class="btn btn-primary float-right">Save</button>
+      <button id="savefieldStationPOCsAndOfficersBtn" class="btn btn-primary float-right">Save</button>
     </div>
   </form>
 </div>
