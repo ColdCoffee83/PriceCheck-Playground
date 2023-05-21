@@ -372,4 +372,22 @@ export function submitBtnClickHandler() {
   
     return savedCollaborationStakeholders;
   }
+
+// Event listener for "Select Field Station POCs" button
+$('#searchFieldStationPOCsBtn').click(function() {
+    // Open the Field Station POCs modal
+    $('#fieldStationPOCsModal').modal('show');
+
+    // Populate the modal with a list of people
+    functions.populateModalWithPeople('fieldStationPOCsModal', 'selectedFieldStationPOCsTbl');
+});
+
+// Event listener for "Select Desk Officers" button
+$('#searchDeskOfficersBtn').click(function() {
+    // Open the Desk Officers modal
+    $('#deskOfficersModal').modal('show');
+
+    // Populate the modal with a list of people
+    functions.populateModalWithPeople('deskOfficersModal', 'selectedDeskOfficersTbl');
+});
   

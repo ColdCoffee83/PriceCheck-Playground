@@ -278,30 +278,32 @@ required="true"/>
         </div>
     </div>
     <c:if test="${canViewEquityCheckInternalDueDate}">
-        <button 
-            id="searchFieldStationPOCsAndDeskOfficersBtn" 
-            type="button" 
-            class="btn btn-primary fielsStationPOC_DeskOfficer Search" 
-            style="display: none;">
-            Select Field Station POCs and Desk Officers
-        </button>
-        <div 
-            id="fieldStationPOCsAndDeskOfficersList" 
-            class="form-group" 
-            style="display: none;">
-            <table 
-                id="selectedFieldStationPOCsAndDeskOfficersListTb1" 
-                class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Divison/Office</th>
-                        <th>Type</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
+        <button id="searchFieldStationPOCsButton" type="button" class="btn btn-primary">Select Field Station POCs</button>
+        <button id="searchDeskOfficersButton" type="button" class="btn btn-primary">Select Desk Officers</button>
+
+        <div id="fieldStationPOCsList" class="form-group" style="display: none;">
+    <table id="selectedFieldStationPOCsTbl" class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Divison/Office</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+<div id="deskOfficersList" class="form-group" style="display: none;">
+    <table id="selectedDeskOfficersTbl" class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Divison/Office</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
     </c:if>
 </div>
 <div class="row">
@@ -444,4 +446,39 @@ required="true"/>
         </div>
     </div>
 </div>
+<div class="modal" tabindex="-1" role="dialog" id="fieldStationPOCsModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Field Station POCs</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Content of modal body -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="addFieldStationPOCsBtn">Add Selected POCs</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" tabindex="-1" role="dialog" id="deskOfficersModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Desk Officers</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Content of modal body -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="addDeskOfficersBtn">Add Selected Officers</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
   

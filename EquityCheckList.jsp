@@ -26,7 +26,7 @@
         </div>  
 
         <div class="row">
-            <button id="hideFilters" class="hideFiltersBtn btn btn-primary">  
+            <button id="hideFilters" class="hideFiltersBtn btn btn-primary" type="button">  
                 Hide Filters  
             </button>
             <button id="resetFilters" type="button" title="Reset Filters">  
@@ -122,43 +122,39 @@
                                         <h3 class="spanFld">  
                                             <span class="fa fa-trash bgTMxt"></span> - Remove The Equity Check Request </h3>  
                                     </div>                                      
-                                    <table class="table table-bordered table-bordered-filtered data-table listTable selRowTb1 hov  
-                                    id="equitiesList" title="Equities table" aria-label="This table displays all the Equity Check requests in Americano.  
+                                    <table class="table table-bordered table-bordered-filtered data-table listTable selRowTb1 hov" id="equitiesList" title="Equities table" aria-label="This table displays all the Equity Check requests in Americano.">  
                                     <thead>  
-                                        <tr class="tblHeader" data-edit="S(canEdit)" data-delete="${canDelete)"  
+                                        <tr class="tblHeader" data-edit="$(canEdit)" data-delete="${canDelete}">    
                                         >  
-                                            <th data-column="O" data-val="id" id-"eqSearchId"»  
+                                            <th data-column="O" data-val="id" id="eqSearchId"»  
                                             EQUI Number:  
                                             </th>  
                                             <th class="tblHeaderName" data-column="1" data-val="status"> Status:  
                                             </th>  
                                             <th data-column="2" data-val="insertTimestamp">Created Date:</th>  
-                                            <th data-column="g" data-val "officePOC",  
-                                            Office POC:  
-                                            </th>  
-                                            <th data-column="g" data-val-"requestingoffice",  
-                                            Requesting Office </th>  
-                                            <th data-column="5" data-val="requestedDueDate",  
+                                            <th data-column="3" data-val="officePOC">Office POC:</th>  
+                                            <th data-column="4" data-val-"requestingoffice">Requesting Office </th>  
+                                            <th data-column="5" data-val="requestedDueDate">  
                                             Requested Due Date:  
                                             </th>  
-                                            <c:if test="s (canViewEquityCheckInternalDueDate) "s  
-                                                <th data-column="6" data-vals"internalDueDate",  
-                                                Internal Due Date:  
-                                                </th> 
-                                            </c:if>  
-                                            <th data-column="" data-val="proposedEngagementDate"»  
+                                            <c:if test="${canViewEquityCheckInternalDueDate}">
+    <th data-column="6" data-vals="internalDueDate">  
+        Internal Due Date:  
+    </th> 
+</c:if>  
+                                            <th data-column="7" data-val="proposedEngagementDate">  
                                             Proposed Engagement Date:  
                                             </th>  
-                                            <th data-column="g" data-vals"fieldStationList"s  
+                                            <th data-column="8" data-val="fieldStationList">  
                                             Field Station (s):  
                                             </th>  
-                                            <th data-column="9" data-vals"organizationName",  
+                                            <th data-column="9" data-val="organizationName">  
                                             Organization Name:  
                                             </th>  
-                                            <th data-column="10' data-val="justification",  
+                                            <th data-column="10" data-val="justification">  
                                             Justification:  
                                             </th>  
-                                            <th data-column="11" data-val="requestType",  
+                                            <th data-column="11" data-val="requestType">  
                                             Request Type:  
                                             </th>  
                                             <th data-column="12" data-val="actionPOC">  
@@ -174,7 +170,7 @@
                     </div>  
                 </div>  
             </div>  
-        <div id="tableSec_OrganizationView" width="3372"> 
+        <div id="tableSec_OrganizationView" style="width: 3372px;"> 
             <h1>Organization Names</h1>
             <table id="organizationView">
                 <thead>  
