@@ -177,83 +177,58 @@ export function submitBtnClickHandler() {
       return false;
     }
   }
-  export function addFieldStationPOCsAndDeskOfficersBtnClickHandler(
-    selectedFieldStationPOCs,
-    savedFieldStationPOCs,
-    selectedDeskOfficers,
-    savedDeskOfficers,
-  ) {
-    const link = appContext + "/dialog/setFieldStationPOCsAndDeskOfficers";
-    dialogUtil.showInfoNoForm(
-      link,
-      "Select Field Station POCs and Desk Officers",
-      function() {
-        $(".personSearchField").on("keyup", function(e) {
-          typeDelay(function() {
-            $("#searchFieldStationPOCsAndDeskOfficersTbl")
-              .DataTable()
-              .ajax.reload();
-          }, 250);
-        });
-      },
-    );
-    selectedFieldStationPOCs = functions.populateSelectedListFromSavedList(
-      selectedFieldStationPOCs,
-      savedFieldStationPOCs,
-    );
-    selectedDeskOfficers = functions.populateSelectedListFromSavedList(
-      selectedDeskOfficers,
-      savedDeskOfficers,
-    );
   
-    // TODO: anything else in the event listener
+  export function addBtnClickHandler(
+  checkEquiIdValue,
+  selectedItems,
+  savedItems,
+  context
+) {
+  let link = appContext + "/dialog/setUsers";
+  let infoBoxTitle;
+  let dataTableFunction;
+  let widthOfInfoBox = 1400;
+    
+  switch (context) {
+    case "FieldStationPOCs":
+      infoBoxTitle = "Select Field Station POCs";
+      // TODO: adapt setUpDataTable for Field Station POCs
+      dataTableFunction = setupDataTable;
+      break;
+    case "DeskOfficers":
+      infoBoxTitle = "Select Desk Officers";
+      // TODO: adapt setUpDataTable for Desk Officers
+      dataTableFunction = setupDataTable;
+      break;
+    case "CollaborationStakeholders":
+      infoBoxTitle = "Select Collaboration Stakeholders";
+      dataTableFunction = setupDataTable;      
+      break;
   }
-  export function addCollaborationStakeholdersBtnClickHandler(
-    checkEquiIdValue,
-    selectedCollaborationStakeholders,
-    savedCollaborationStakeholders,
-  ) {
-    const link = appContext + "/dialog/setCollaborationStakeholders";
-    dialogUtil.showInfoNoForm(
-      link,
-      "Select Collaboration Stakeholders",
-      function() {
-        $(".personSearchField").on("keyup", function(e) {
-          typeDelay(function() {
-            $("#searchCollaborationStakeholdersTbl")
-              .DataTable()
-              .ajax.reload();
-          }, 250);
-        });
-      },
-    );
-    selectedCollaborationStakeholders = functions.populateSelectedListFromSavedList(
-      selectedCollaborationStakeholders,
-      savedCollaborationStakeholders,
-    );
-    $("#collabStakeholdersList").on("click", "stakeholderRemoveBtn", (e) => {
-      selectedCollaborationStakeholders = stakeholderRemoveBtnClickHandler(
-        selectedCollaborationStakeholders,
-        null,
-      );
+
+  dialogUtil.showInfoNoForm(link, infoBoxTitle, function() {
+    $(".personSearchField").on("keyup", function(e) {
+      typeDelay(function() {
+        $("#searchCollaborationStakeholdersTbl")
+          .DataTable()
+          .ajax.reload();
+      }, 250);
     });
-    selectedCollaborationStakeholders = functions.populateSelectedListFromSavedList(
-      selectedCollaborationStakeholders,
-      savedCollaborationStakeholders,
-    );
-    functions.updateSelectedStakeholdersList(selectedCollaborationStakeholders);
-    selectedCollaborationStakeholders = setupSearchCollaborationStakeholdersDataTable(
-      selectedCollaborationStakeholders,
-    );
-    $("#saveStakeholdersBtn").on("click", (e) => {
-      savedCollaborationStakeholders = saveStakeholdersBtnClickHandler(
-        checkEquiIdValue,
-        selectedCollaborationStakeholders,
-        savedCollaborationStakeholders,
-        1400, // width of the info box
-      );
-    });
-  }
+  });
+
+  selectedItems = functions.populateSelectedListFromSavedList(selectedItems, savedItems);
+  $("#collabStakeholdersList").on("click", "stakeholderRemoveBtn", (e) => {
+    selectedItems = stakeholderRemoveBtnClickHandler(selectedItems, null);
+  });
+
+  selectedItems = functions.populateSelectedListFromSavedList(selectedItems, savedItems);
+  functions.updateSelectedStakeholdersList(selectedItems);
+  selectedItems = dataTableFunction(selectedItems);
+  $("#saveStakeholdersBtn").on("click", (e) => {
+    savedItems = saveStakeholdersBtnClickHandler(checkEquiIdValue, selectedItems, savedItems, widthOfInfoBox);
+  });
+}
+
   
   export function stakeholderRemoveBtnClickHandler(
     selectedCollaborationStakeholders,
@@ -286,29 +261,48 @@ export function submitBtnClickHandler() {
   
     return selectedCollaborationStakeholders;
   }
-  
-  function setupSearchCollaborationStakeholdersDataTable(
-    selectedCollaborationStakeholders,
-  ) {
-    $("#searchCollaborationStakeholdersTbl").DataTable({
+
+  function setupDataTable(selectedItems, context) {
+  let tableName, addBtnTitle, removeBtnTitle;
+  switch (context) {
+    case "FieldStationPOCs":
+      tableName = "#searchFieldStationPOCsTbl";
+      addBtnTitle = "Select FieldStationPOC";
+      removeBtnTitle = "Remove FieldStationPOC";
+      break;
+    case "DeskOfficers":
+      tableName = "#searchDeskOfficersTbl";
+      addBtnTitle = "Select Desk Officer";
+      removeBtnTitle = "Remove Desk Officer";
+      break;
+    case "CollaborationStakeholders":
+      tableName = "#searchCollaborationStakeholdersTbl";
+      addBtnTitle = "Select Person";
+      removeBtnTitle = "Remove Person";
+      break;
+  }
+
+  $(tableName).DataTable({
       columns: [
         { data: "displayName" },
         { data: "divOffice" },
-        data: function (row, type, val, meta) {
-          return (
-            "<button type='button' data-id='" +
-            row.ain +
-            "' data-sphone='" +
-            row.securePhone +
-            "' data-displayname='" +
-            row.displayName +
-            "' data-org='" +
-            row.divOffice +
-            "' class='selPersonBtns btn btn-primary btn-small' title='Add " +
-            row.displayName +
-            " to Selected Stakeholders'>Select Person</button>"
-          );
-        },
+        data: function(row, type, val, meta) {
+      return (
+        "<button type='button' data-id='" +
+        row.ain +
+        "' data-sphone='" +
+        row.securePhone +
+        "' data-displayname='" +
+        row.displayName +
+        "' data-org='" +
+        row.divOffice +
+        "' class='selPersonBtns btn btn-primary btn-small' title='Add " +
+        row.displayName +
+        " to Selection'>" +
+        addBtnTitle +
+        "</button>"
+      );
+    },
         ajax: {
           url: appContext + "/ajax/peopleLookup/name",
           type: "GET",
@@ -319,29 +313,27 @@ export function submitBtnClickHandler() {
         },
         drawCallback: function () {
           // updates button text based on presence of stakeholder in selected list
-          const table = $("#searchCollaborationStakeholdersTbl").DataTable();
-          table.rows().every(function (rowIds, tableLoop, rowLoop) {
-            const rowData = this.data();
-            const ain = parseInt(rowData["ain"]);
+          const table = $(tableName).DataTable();
+          table.rows().every(function(rowIds, tableLoop, rowLoop) {
+          const rowData = this.data();
+          const ain = parseInt(rowData["ain"]);
   
-            const index = selectedCollaborationStakeholders.findIndex(
-              item => item.ain === ain,
-            );
+          const index = selectedItems.findIndex(item => item.ain === ain);
   
-            const button = this.nodes().to$().find("button");
+          const button = this.nodes().to$().find("button");
   
-            if (index !== -1) {
-              button.text("Remove Button");
-            } else {
-              button.text("Select Button");
-            }
-          });
-        },
-        paging: false,
-        searching: false,
+          if (index !== -1) {
+            button.text(removeBtnTitle);
+          } else {
+            button.text(addBtnTitle);
+          }
+        });
+      },
+      paging: false,
+      searching: false,
       });
   
-      return selectedCollaborationStakeholders;
+      return selectedItems;
     }
   
   function saveStakeholdersBtnClickHandler(
@@ -372,22 +364,3 @@ export function submitBtnClickHandler() {
   
     return savedCollaborationStakeholders;
   }
-
-// Event listener for "Select Field Station POCs" button
-$('#searchFieldStationPOCsBtn').click(function() {
-    // Open the Field Station POCs modal
-    $('#fieldStationPOCsModal').modal('show');
-
-    // Populate the modal with a list of people
-    functions.populateModalWithPeople('fieldStationPOCsModal', 'selectedFieldStationPOCsTbl');
-});
-
-// Event listener for "Select Desk Officers" button
-$('#searchDeskOfficersBtn').click(function() {
-    // Open the Desk Officers modal
-    $('#deskOfficersModal').modal('show');
-
-    // Populate the modal with a list of people
-    functions.populateModalWithPeople('deskOfficersModal', 'selectedDeskOfficersTbl');
-});
-  

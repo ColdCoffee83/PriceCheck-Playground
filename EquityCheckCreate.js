@@ -34,21 +34,31 @@ import * as functions from "./equityCheckCreateFunctions.js";
    events.bindEvents();
   functions.initForm();
   setSecChange();
-  functions.showHideElementsBasedOnStatus();
-   // Fetch saved collaboration stakeholders
-  functions.updateSelectedCollaborationStakeholdersTbl(checkEquiIdValue).then(function(data) {
+  functions.showHideElementsBasedOnStatus();               
+   
+   
+functions.updateSelectedTable(checkEquiIdValue, "CollaborationStakeholders").then(function(data) {
     savedCollaborationStakeholders = data;
-  });
-   // Check collaboration email status
+});
+functions.updateSelectedTable(checkEquiIdValue, "FieldStationPOCs").then(function(data) {
+    savedFieldStationPOCs = data;  
+});
+functions.updateSelectedTable(checkEquiIdValue, "DeskOfficers").then(function(data) {
+     savedDeskOfficers = data;
+});
+
+   
+  // Check collaboration email status
   async function checkCollaborationEmailStatus() {
-    try {
-      collaborationEmailSent = await functions.fetchCollaborationEmailStatus(checkEquiIdValue);
-    } catch (error) {
-      console.error("Error checking collaboration email status:", error);
-    }
+  try {
+    collaborationEmailSent = await functions.fetchCollaborationEmailStatus(checkEquiIdValue);
+  } catch (error) {
+    console.error("Error checking collaboration email status:", error);
+  }
     return collaborationEmailSent;
   }
-  checkCollaborationEmailStatus();
+  
+   checkCollaborationEmailStatus();
    // Handle navigation bar click
   $(".navbar a").on("click", (e) => {
     isNavigationWarningEnabled = events.navbarClickHandler(
@@ -87,34 +97,50 @@ import * as functions from "./equityCheckCreateFunctions.js";
   functions.setupActionPOC();
    // Show/hide elements based on status
   functions.showHideElementsBasedOnStatus();
-   // Handle field station POC and desk officer search
-  $(document).on("click", ".fielsStationPOC_DeskOfficer_Search", () => {
-    events.addFieldStationPOCsAndDeskOfficersBtnClickHandler(
-      checkEquiIdValue,
-      selectedFieldStationPOCs,
-      savedFieldStationPOCs,
-      selectedDeskOfficers,
-      savedDeskOfficers
-    );
-  });
-   // Handle collaboration stakeholder search
-  $(document).on("click", ".sendCollaborationEmailBtnSearch", () => {
-    events.addCollaborationStakeholdersBtnClickHandler(
-      checkEquiIdValue,
-      selectedCollaborationStakeholders,
-      savedCollaborationStakeholders
-    );
-  });
+     
+// handle clicking on add field station POC button
+$(document).on("click", ".addFieldStationPOCBtn", () => {
+  events.addBtnClickHandler(
+    checkEquiIdValue,
+    selectedFieldStationPOCs,
+    savedFieldStationPOCs,
+    'FieldStationPOCs'
+  );
+});
+
+// handle clicking on add desk officers button
+$(document).on("click", ".addDeskOfficerBtn", () => {
+  events.addBtnClickHandler(
+    checkEquiIdValue,
+    selectedDeskOfficers,
+    savedDeskOfficers,
+    'DeskOfficers'
+  );
+});
+
+// Handle collaboration stakeholder search
+$(document).on("click", ".sendCollaborationEmailBtnSearch", () => {
+  events.addBtnClickHandler(
+    checkEquiIdValue,
+    selectedCollaborationStakeholders,
+    savedCollaborationStakeholders,
+    'CollaborationStakeholders'
+  );
+});
+
+    
    // Handle send collaboration email button click
   $(".sendCollaborationEmailBtn").unbind().click(() => {
     collaborationEmailSent = events.sendCollaborationEmailBtnClickHandler(
       collaborationEmailSent
     );
   });
+   
    // Handle status history click
   $(document).on("click", ".statusHistoryBtn", () => {
     events.showStatusHistoryClickHandler(checkEquiIdValue);
   });
+   
    // Delete draft on page unload
   window.onbeforeunload = function() {
     functions.deleteDraft();
