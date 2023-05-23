@@ -5,7 +5,7 @@
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="f" uri="http://latte.com/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
-<%@taglib prefix="field" tagdir="/WEB- INF/tags/fields"%>
+<%@taglib prefix="field" tagdir="/WEB-INF/tags/fields"%>
  <!-- CSS -->
 <link href="${pageContext.request. contextPath}/css/chosen/chosen.min.css" rel="stylesheet">
 <link href="${pageContext.request.contextPath}/css/pages/equityChecks/equityCheckCreate.css" rel="stylesheet">
@@ -18,12 +18,12 @@
 <script src="${pageContext.request.contextPath}/js/jq/chosen/chosen.jquery.min.js"></script>
 <script src="${pageContext.request.contextPath}/js/fields/multiFileUpload.js"></script>
 <script src="${pageContext.request.contextPath}/js/util/dateUtil.js"></script>
-<script src="$(pageContext.request.contextPath}/js/parts/linkList.js"></script>
+<script src="${pageContext.request.contextPath}/js/parts/linkList.js"></script>
 <script src="${pageContext.request.contextPath}/js/parts/validation.js"></script>
  
-<input type="hidden" id="americanoEquityCheck" class="pageType" value="${americanoEquityCheck}" />
-<input type="hidden" id="userRole" data-is-admin="${canViewEquityCheckInternalDueDate}" />
-<form id ="equityCheckCreateForm" action="${pageContext.request.contextPath}/equity/save” method="post" name="equityCheck">
+<input type="hidden" id="americanoEquityCheck" class="pageType" value="${americanoEquityCheck}"/>
+<input type="hidden" id="userRole" data-is-admin="${canViewEquityCheckInternalDueDate}"/>
+<form id ="equityCheckCreateForm" action="${pageContext.request.contextPath}/equity/save" method="post" name="equityCheck">
   <input type="checkbox" class="hidden" id="isDraft" name="isDraft">
   <input type="hidden" id="isEmptyEquityCheck" value="${equityCheck.isEmptyEquityCheck}" />
   <button type="submit" class="hidden"></button>
@@ -34,15 +34,15 @@
        <div>
         <c:if test="${equityCheck.officePOC == null}">
           <n:sectionHeader title="Create <span class='grn'>S{equityCheck.equiNumber}</span>"/>
-        </ecrit>
+        </c:if>
         <c:if test="${equityCheck.officePOC != null}">          
           <n:sectionHeader title="Edit <span class='grn'>${equityCheck.equiNumber}</span>"/>
-        </ol>
+        </c:if>
         <div class="row">
           <div class="col-sm-12 text-right">
             <c:if test="${equityCheck.status == 'Draft'}">
               <button type="button" class="btn btn-default saveAsDraftBtn" title="SaveAsDraft">Save as Draft</button>
-            <lesit>
+            </c:if>
             <button type="button" class="btn btn-default submitBtn" title="Create">${equityCheckOperation}</button>
             <button type="button" class="btn btn-default red cancelBtn">Cancel</button>
           </div>
@@ -153,7 +153,8 @@ required="true"/>
  <div class="row">
     <div class="col-3">
         <div class="container-fluid">
-            <field:formList id="justification" name="justification” title="Justification:" required="true">
+            <field:formList id="justification" name="justification" title="Justification:" required="true">
+
                 <option></option>
                 <option value="Operational" <c:if test="${equityCheck.justification == 'Operational'}">selected</c:if>>Operational</option>
                 <option value="Outreach" <c:if test="${equityCheck.justification == 'Outreach'}">selected</c:if>>Outreach</option>
@@ -172,8 +173,9 @@ required="true"/>
   <div class="container-fluid">
   <field:formList id="requestType" name="requestType" title="Request Type:" required="true">
     <option></option>
-    <option value="Traditional" <c:if test="S${equityCheck.requestType == 'Traditional'}">selected</c:if>>Traditional</option>
-    <option value="Executive" <c:if test="S${equityCheck.requestType == 'Executive'}">selected</c:if>>Executive</option>
+    <option value="Traditional" <c:if test="${equityCheck.requestType == 'Traditional'}">selected</c:if>>Traditional</option>
+<option value="Executive" <c:if test="${equityCheck.requestType == 'Executive'}">selected</c:if>>Executive</option>
+
   </field:formList>
   <!-- Anticipated Highest Security Level -->
   <field:formList id="anticipatedHighestSecurityLevel" name="anticipatedHighestSecurityLevel" title="Highest Classification:" required="true">
@@ -193,7 +195,7 @@ required="true"/>
       <div class="container-fluid">
         <field:formDate id="internalDueDate" fieldId="internalDueDateFld" name="internalDueDate" pattern="\d{2}/\d{2}/\d{4}" label="Internal Due Date:" value="${equityCheck.internalDueDate}" required="true"/>
         <input type="hidden" id="actionPOCId" name="actionPOCId" value="${equityCheck.actionPOC.id}"/>
-        <label for="actionPOCName" style="font-weight: bold">Action actionPOCSearch' 2958 <button id='setActionPOC_Clear' type='button' class='btn btn-primary'>Clear</button> 9 </div> 60 </div>
+       <label for="actionPOCName" style="font-weight: bold">Action POC Name:</label><button id='setActionPOC_Clear' type='button' class='btn btn-primary'>Clear</button> </div></div>
     </div>
   </c:if>
 </div>
@@ -269,9 +271,9 @@ required="true"/>
     <div class="col-6">
         <div class="container-fluid">
             <field: formInput 
-                id="priorCompanyContactk" 
+                id="priorCompanyContact" 
                 type="input" 
-                name="priorCompanyContac pPoc" 
+                name="priorCompanyContactPOC" 
                 value="${equityCheck.priorCompanyContactPOC}" 
                 title="With Whom Did You Speak?:" 
                 maxlength="256"/>
@@ -281,7 +283,7 @@ required="true"/>
         <button id="searchFieldStationPOCsButton" type="button" class="btn btn-primary">Select Field Station POCs</button>
         <button id="searchDeskOfficersButton" type="button" class="btn btn-primary">Select Desk Officers</button>
 
-        <div id="fieldStationPOCsList" class="form-group" style="display: none;">
+<div id="fieldStationPOCsList" class="form-group" style="display: none;">
     <table id="selectedFieldStationPOCsTbl" class="table table-bordered">
         <thead>
             <tr>
@@ -292,6 +294,7 @@ required="true"/>
         <tbody></tbody>
     </table>
 </div>
+
 <div id="deskOfficersList" class="form-group" style="display: none;">
     <table id="selectedDeskOfficersTbl" class="table table-bordered">
         <thead>
@@ -406,12 +409,11 @@ required="true"/>
  <!-- Row containing buttons to save, submit and cancel -->
 <div class="row">
     <div class="col-sm-12 text-right">
-        <!-- Conditional statement to check if Easter wand LyChspkopeyation is 'Create' -->
-        if Easter {wand LyChspkopeyation == 'Create'}">
+        <c:if test="${equityCheckOperation == 'Create'}">
             <button type="button" class="btn btn-default
             saveAsDraftBtn" title="SaveAsDraft">Save as
             Draft</button>
-        </esies
+        </c:if>
         <!-- Button to submit -->
         <button type="button" class="btn btn-default
         submitBtn"

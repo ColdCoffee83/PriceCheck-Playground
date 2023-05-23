@@ -1,5 +1,5 @@
-import * as functions from "./equityCheckCreateFunctions.¡s";
-import { TABLE_NAMES, LIST_NAMES, BUTTON_TITLES} from "./equityCheckCreateConstants.js";
+import * as functions from "./equityCheckCreateFunctions.js";
+import { TABLE_NAMES, LIST_NAMES, BUTTON_TITLES, SAVE_BUTTONS} from "./equityCheckCreateConstants.js";
 
 $("#isDraft").prop("checked", true);
 if ($("#justification").val() === "") {
@@ -9,33 +9,34 @@ if ($("#requestType").val() === "") {
   $("#requestType").val("None");
 }
 export function submitBtnClickHandler() {
-    const form = $("#equityCheckCreateForm");
-    const inst = $("button.submitBtn");
-    inst.prop("disabled", true);
-    const invalidFields = form.find(":invalid");
-  
-    // custom validation for action POC input
-    const actionPOCIsRequired = $("#actionPOCId").prop("required");
-    const actionPOCIsEmpty = !$("#actionPOCId").val();
-  
-    if (invalidFields.length > 0 || (actionPOCIsRequired && actionPOCIsEmpty)) {
-      const errorMessage = functions.generateErrorMessage(
-        invalidFields,
-        actionPOCIsRequired && actionPOCIsEmpty
-      );
-      dialogUtil.alert("Validation Error", errorMessage, function() {
-        const invalidField = invalidFields.first();
-        invalidField.focus();
-        invalidField.scrollIntoView();
-      });
-      inst.prop("disabled", false);
-      return false;
-    }
-  
-    // proceed to save as usual
-    form.find("button[type='submit']").removeAttr("disabled").click();
+  const form = $("#equityCheckCreateForm");
+  const inst = $("button.submitBtn");
+  inst.prop("disabled", true);
+  const invalidFields = form.find(":invalid");
+
+  // custom validation for action POC input
+  const actionPOCIsRequired = $("#actionPOCId").prop("required");
+  const actionPOCIsEmpty = !$("#actionPOCId").val();
+
+  if (invalidFields.length > 0 || (actionPOCIsRequired && actionPOCIsEmpty)) {
+    const errorMessage = functions.generateErrorMessage(
+      invalidFields,
+      actionPOCIsRequired && actionPOCIsEmpty
+    );
+    dialogUtil.alert("Validation Error", errorMessage, function() {
+      const invalidField = invalidFields.first();
+      invalidField.focus();
+      invalidField.scrollIntoView();
+    });
+    inst.prop("disabled", false);
     return false;
   }
+
+  // proceed to save as usual
+  form.find("button[type='submit']").removeAttr("disabled").click();
+  return false;
+}
+
   
 export function showStatusHistoryClickHandler(checkEquiIdValue) {
       const newOrder = ["Draft", "Submitted", "Received", "Processing", "In Coordination", "Completed"];
@@ -185,7 +186,7 @@ export function sendCollaborationEmailBtnClickHandler(collaborationEmailSent) {
     }
   }
   
-  export function addBtnClickHandler(
+export function addBtnClickHandler(
   checkEquiIdValue,
   selectedItems,
   savedItems,
@@ -207,7 +208,7 @@ export function sendCollaborationEmailBtnClickHandler(collaborationEmailSent) {
       focusedTable = TABLE_NAMES.FieldStationPOCs;
       removeBtn = BUTTON_TITLES.remove.FieldStationPOCs;
       itemType = "field-station-item";
-      saveBtn = "#saveStakeholdersBtn";
+      saveBtn = SAVE_BUTTON_TITLES.SaveFieldStationPOCs;
       break;
     case "DeskOfficers":
       infoBoxTitle = "Select Desk Officers";
@@ -215,6 +216,7 @@ export function sendCollaborationEmailBtnClickHandler(collaborationEmailSent) {
       focusedTable = TABLE_NAMES.DeskOfficers;
       removeBtn = BUTTON_TITLES.remove.DeskOfficers;
       itemType = "desk-officer-item";
+      saveBtn = SAVE_BUTTON_TITLES.SaveDeskOfficers;      
       break;
     case "CollaborationStakeholders":
       infoBoxTitle = "Select Collaboration Stakeholders";   
@@ -222,10 +224,11 @@ export function sendCollaborationEmailBtnClickHandler(collaborationEmailSent) {
       focusedTable = TABLE_NAMES.CollaborationStakeholders;
       removeBtn = BUTTON_TITLES.remove.CollaborationStakeholders; 
       itemType = "stakeholder-item";
+      saveBtn = SAVE_BUTTON_TITLES.SaveCollaborationStakeholders;
       break;
   }
 
-  dialogUtil.showInfoNoForm(link, infoBoxTitle, function() {
+  dialogUtil.showInfo(link, infoBoxTitle, function() {
     $(".personSearchField").on("keyup", function(e) {
       typeDelay(function() {
         $(focusedTable)
@@ -233,20 +236,29 @@ export function sendCollaborationEmailBtnClickHandler(collaborationEmailSent) {
           .ajax.reload();
       }, 250);
     });
+
+    setTimeout(
+      function() {
+        selectedItems = functions.updateSelectedItemsList(selectedItems, focusedList, itemType);
+      },
+      500
+    );
   });
 
   selectedItems = functions.populateSelectedListFromSavedList(selectedItems, savedItems);
-  $(focusedList).on("click", removeBtn, (e) => {
+    
+  $(focusedList).on("click", removeBtn, e => {
     selectedItems = removeBtnClickHandler(selectedItems, null);
   });
 
   selectedItems = functions.populateSelectedListFromSavedList(selectedItems, savedItems);
-  functions.updateSelectedItemsList(selectedItems, focusedList, itemType);
-  selectedItems = dataTableFunction(selectedItems);
-  $("#saveStakeholdersBtn").on("click", (e) => {
-    savedItems = saveStakeholdersBtnClickHandler(checkEquiIdValue, selectedItems, savedItems, widthOfInfoBox);
+ 
+  $(saveBtn).on("click", e => {
+    savedItems = saveBtnClickHandler(checkEquiIdValue, selectedItems, savedItems, itemType);
   });
+}, widthOfInfoBox);
 }
+
 
   
   export function removeBtnClickHandler(
@@ -331,31 +343,48 @@ export function sendCollaborationEmailBtnClickHandler(collaborationEmailSent) {
   }
 
   
-  function saveStakeholdersBtnClickHandler(
-    checkEquiIdValue,
-    selectedCollaborationStakeholders,
-    savedCollaborationStakeholders,
-    e,
+  function saveBtnClickHandler(
+    checkEquiIdValue, selectedItems, focusedList, itemType, e
   ) {
     e.preventDefault();
-  
+
+    let ajaxUrl = "";
+    switch (itemType) {
+      case "stakeholder-item":
+        ajaxUrl = appContext + "/ajax/americano/saveCollaborationStakeholders";
+        break;
+      case "field-station-item":
+        ajaxUrl = appContext + "/ajax/americano/saveFieldStationPOCs";
+        break;
+      case "desk-officer-item":
+        ajaxUrl = appContext + "/ajax/americano/saveDeskOfficers";
+        break;
+      default:
+        console.error(`Unexpected itemType: ${itemType}`);
+        return;
+    }
+    
     $.ajax({
-      url: appContext + "/ajax/americano/equityCheck/saveCollaborationStakeholders/" + checkEquiIdValue,
+      url: ajaxUrl,
       method: "POST",
       contentType: "application/json",
-      data: JSON.stringify(selectedCollaborationStakeholders),
+      data: JSON.stringify({
+        equityCheckId: checkEquiIdValue,
+        stakeholders: savedItems
+      }),
       success: function (response) {
         dialogUtil.closeDialog();
-        functions.updateSelectedCollaborationStakeholders(checkEquiIdValue).then(
+        functions.updateSelectedItemsList(checkEquiIdValue).then(
           function (data) {
-            savedCollaborationStakeholders = data;
+            focusedList = data;
           },
         );
       },
       error: function (xhr, status, error) {
-        console.error("Error while saving stakeholders: " + status + " " + error);
+        console.error("Error while saving list: " + status + " " + error);
       },
     });
   
-    return savedCollaborationStakeholders;
+    return savedItems;
   }
+

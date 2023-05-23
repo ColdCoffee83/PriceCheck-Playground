@@ -406,85 +406,22 @@ export function populateSelectedListFromSavedList(selected, saved) {
   return selected;
 }
 
-export function updateSelectedStakeholdersList(selectedCollaborationStakeholders) {
-  let list = $("#collabStakeholdersList");
+export function updateSelectedItemsList(selectedItems, focusedList, itemType) {
+  const list = focusedList;
   list.empty();
-  for (const stakeholder of selectedCollaborationStakeholders) {
-    const listItem = $("<li>", {
-      class: "list-group-item d-flex align-items-center stakeholder-item",
-    });
-    listItem.text(stakeholder.displayName);
-    listItem.attr("data-id", stakeholder.ain);
-    const btRemove = $("<button>", {
-      class: "btn btn-sm btn-danger ml-auto stakeholderRemoveBtn",
-    });
-    btRemove.text("x");
-    btRemove.data("id", stakeholder.ain);
-    btRemove.attr("title", `Remove ${stakeholder.displayName} from Selected Stakeholders`);
-    btRemove.click((e) => {
-      let stakeholderId = stakeholder.ain;
-      selectedCollaborationStakeholders = events.stakeholderRemoveBtnClickHandler(
-        selectedCollaborationStakeholders,
-        stakeholderId,
-      );
-    });
-    listItem.append(btRemove);
-    list.append(listItem);
+  for (let item of selectedItems) {
+    const listItem = $(`<li class="list-group-item d-flex align-items-center ${itemType}">`);
+    listItem.text(item.displayName);
+    listItem.attr("data-id", item.ain);
+    const removeBtn = $(`<button class="btn btn-danger btn-sm removeBtn">Remove</button>`);
+    removeBtn.text("x");
+    removeBtn.attr("data-id", item.ain);
+    removeBtn.attr("title", `Remove (${item.displayName}) from Selection`);
+    removeBtn.on("click", () => events.removeBtnClickHandler(selectedItems, item.ain, focusedList, event));
+    listItem.append(removeBtn);
+    list.append(listItem);  
   }
-}
-
-export function updateSelectedFieldStationPoCsList(selectedFieldStationPOCs) {
-  let list = $("#fieldStationPOCsList");
-  list.empty();
-  for (const stakeholder of selectedCollaborationStakeholders) {
-    const listItem = $("<li>", {
-      class: "list-group-item d-flex align-items-center field-station-item",
-    });
-    listItem.text(stakeholder.displayName);
-    listItem.attr("data-id", stakeholder.ain);
-    const btRemove = $("<button>", {
-      class: "btn btn-sm btn-danger ml-auto stakeholderRemoveBtn",
-    });
-    btRemove.text("x");
-    btRemove.data("id", stakeholder.ain);
-    btRemove.attr("title", `Remove ${stakeholder.displayName} from Selected Stakeholders`);
-    btRemove.click((e) => {
-      let stakeholderId = stakeholder.ain;
-      selectedCollaborationStakeholders = events.stakeholderRemoveBtnClickHandler(
-        selectedCollaborationStakeholders,
-        stakeholderId,
-      );
-    });
-    listItem.append(btRemove);
-    list.append(listItem);
-  }
-}  
-
-export function updateSelectedDeskOfficersList(selectedDeskOfficers) {
-  let list = $("#deskOfficersList");
-  list.empty();
-  for (const deskOfficer of selectedDeskOfficers) {
-    const listItem = $("<li>", {
-      class: "list-group-item d-flex align-items-center desk-officer-item",
-    });
-    listItem.text(deskOfficer.displayName);
-    listItem.attr("data-id", deskOfficer.ain);
-    const btRemove = $("<button>", {
-      class: "btn btn-sm btn-danger ml-auto desk-officer-remove-btn",
-    });
-    btRemove.text("x");
-    btRemove.data("id", deskOfficer.ain);
-    btRemove.attr("title", `Remove ${deskOfficer.displayName} from Selected Desk Officers`);
-    btRemove.click((e) => {
-      let stakeholderId = deskOfficer.ain;
-      selectedDeskOfficers = events.stakeholderRemoveBtnClickHandler(
-        selectedDeskOfficers,
-        stakeholderId,
-      );
-    });
-    listItem.append(btRemove);
-    list.append(listItem);
-  }
+  return list;
 }
 
 export function sendEmailToCollaborationStakeholders(checkEquiIdValue, savedCollaborationStakeholders) {
