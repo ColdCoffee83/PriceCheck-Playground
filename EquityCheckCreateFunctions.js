@@ -1,29 +1,20 @@
 import * as events from "./equityCheckCreateEvents.is";
+import {LIST_NAMES, TABLE_NAMES, BUTTON_TITLES} from "./equityCheckCreateConstants.js";
+
 // Function to add weekdays to a given date
 export function addWeekdays(current, days) {
-  // Create a new Date object from the current date
   var businessDay = new Date(current);
-  // Get the day of the week
   var dayOfWeek = businessDay.getDay();
-  // If the day of the week is Saturday or Sunday
   if (dayOfWeek === 6 || dayOfWeek === 0) {
-      // Initialize a counter
       var count = 0;
-      // If the number of days to add is greater than 0
       if (days > 0) {
-          // Loop until the counter is equal to the number of days to add
           while (count < days) {
-              // Add one day to the date
               businessDay.setDate(businessDay.getDate() + 1);
-              // Get the day of the week
               dayOfWeek = businessDay.getDay();
-              // If the day of the week is not Saturday or Sunday
               if (dayOfWeek !== 6 && dayOfWeek !== 0)
-                  // Increment the counter
                   count++;
           }
       }
-      // Return the new date
       return businessDay;
   }
 }
@@ -117,12 +108,13 @@ const checkEquiIdValue = parseInt($("#equityCheckId").val());
 });
 }
 
-export function setupActionPOC() {
+export function setupActionPOC(appContext, dialogUtil, typeDelay, selectActionPOC) {
   const $actionPOCSearch = $(".actionPOCSearch");
   const $personSearchField = $(".personSearchField");
+
   $actionPOCSearch.on('click', function(e) {
-  const link = appContext + "/dialog/setPOC";
-  dialogUtil.showInfoDialog(link, "Set Action POC", function() {
+    const link = appContext + "/dialog/setPOC";
+    dialogUtil.showInfoDialog(link, "Set Action POC", function() {
       typeDelay(function() {
         $("#personTable").DataTable({
           columns: [
@@ -131,11 +123,11 @@ export function setupActionPOC() {
             {
               data: function(row, type, val, meta) {
                 return (
-                  '<button type="button" data-id="' + row.id +
-                  '" data-sphone="' + row.securePhone +
-                  '" data-displayname="' + row.displayName +
-                  '" data-org="' + row.divOffice +
-                  '" class="selPersonBtns btn btn-primary btn-small" title="Select ' +
+                  '<button type="button" data-id="' + row.id + 
+                  '", data-sphone="' + row.securePhone + 
+                  '", data-displayname="' + row.displayName + 
+                  '", data-org="' + row.divOffice + 
+                  '", class="selPersonBtns btn btn-primary btn-small" title="Select ' +
                   row.displayName + '">Select Person</button>'
                 );
               }
@@ -157,20 +149,20 @@ export function setupActionPOC() {
               const name = inst.data("displayName");
               const sPhone = inst.data("sphone");
               const data = {
-                displayName: name,
+                displayName: name, 
                 id: id,
                 organization: org,
                 securePhone: sPhone
               };
               selectActionPOC(data);
             });
-          }
-        },
-        dom: "pt",
-        retrieve: true,
-        pagelength: 5,
-        paging: true,
-        ordering: false
+          },
+          dom: "pt",
+          retrieve: true,
+          pagelength: 5,
+          paging: true,
+          ordering: false
+        });
       });
     });
   });
@@ -284,6 +276,7 @@ export function deleteDraft() {
     });
   }
 }
+
 export function showHideElementsBasedOnStatus() {
   const status = $("#status").val();
   const actionPOCInput = $("#actionPOCId");
@@ -304,21 +297,26 @@ export function showHideElementsBasedOnStatus() {
     status === "In Coordination" ||
     status === "Completed"
   ) {
-    $("#searchCollaborationStakeholdersButton").show();
     $("#processingCheckboxes").show();
-    $("#collabartionStakeholdersList").show();
+    $(LIST_NAMES.CollaborationStakeholders).show();
+    $(LIST_NAMES.FieldStationPOCs).show();
+    $(LIST_NAMES.DeskOfficers).show();
     $("#sendCollaborationEmailBtn").show();
-    $("#addFieldStationPOC").show();
-    $("#addDeskOfficer").show();
+    $(BUTTON_TITLES.add.CollaborationStakeholders).show();
+    $(BUTTON_TITLES.add.FieldStationPOCs).show();
+    $(BUTTON_TITLES.add.DeskOfficers).show();
   } else {
-    $("#searchCollaborationStakeholdersButton").hide();
     $("#processingCheckboxes").hide();
-    $("#collabartionStakeholdersList").hide();
+    $(LIST_NAMES.CollaborationStakeholders).hide();
+    $(LIST_NAMES.FieldStationPOCs).hide();
+    $(LIST_NAMES.DeskOfficers).hide();
     $("#sendCollaborationEmailBtn").hide();
-    $("#addFieldStationPOC").hide();
-    $("#addDeskOfficer").hide();
+    $(BUTTON_TITLES.add.CollaborationStakeholders).hide();
+    $(BUTTON_TITLES.add.FieldStationPOCs).hide();
+    $(BUTTON_TITLES.add.DeskOfficers).hide();
   }
 }
+
 export function updateSelectedTable(equityCheckId, tableType) {
   let endpoint;
   let tableId;
@@ -365,7 +363,6 @@ export function updateSelectedTable(equityCheckId, tableType) {
     });
   });
 }
-
 
 export function isFormInInitialState (initialState) {
 return initialState === $ ("#equityCheckCreateForm") .serialize ();
@@ -439,30 +436,55 @@ export function updateSelectedStakeholdersList(selectedCollaborationStakeholders
 export function updateSelectedFieldStationPoCsList(selectedFieldStationPOCs) {
   let list = $("#fieldStationPOCsList");
   list.empty();
-  for (const poc of selectedFieldStationPOCs) {
+  for (const stakeholder of selectedCollaborationStakeholders) {
     const listItem = $("<li>", {
-      text: poc.displayName,
-      data: {
-        id: poc.ain,
-      },
+      class: "list-group-item d-flex align-items-center field-station-item",
     });
-    listItem.appendTo(list);
+    listItem.text(stakeholder.displayName);
+    listItem.attr("data-id", stakeholder.ain);
+    const btRemove = $("<button>", {
+      class: "btn btn-sm btn-danger ml-auto stakeholderRemoveBtn",
+    });
+    btRemove.text("x");
+    btRemove.data("id", stakeholder.ain);
+    btRemove.attr("title", `Remove ${stakeholder.displayName} from Selected Stakeholders`);
+    btRemove.click((e) => {
+      let stakeholderId = stakeholder.ain;
+      selectedCollaborationStakeholders = events.stakeholderRemoveBtnClickHandler(
+        selectedCollaborationStakeholders,
+        stakeholderId,
+      );
+    });
+    listItem.append(btRemove);
+    list.append(listItem);
   }
-  return selectedFieldStationPOCs;
 }  
+
 export function updateSelectedDeskOfficersList(selectedDeskOfficers) {
   let list = $("#deskOfficersList");
   list.empty();
-  for (const officer of selectedDeskOfficers) {
+  for (const deskOfficer of selectedDeskOfficers) {
     const listItem = $("<li>", {
-      text: officer.displayName,
-      data: {
-        id: officer.ain,
-      },
+      class: "list-group-item d-flex align-items-center desk-officer-item",
     });
-    listItem.appendTo(list);
+    listItem.text(deskOfficer.displayName);
+    listItem.attr("data-id", deskOfficer.ain);
+    const btRemove = $("<button>", {
+      class: "btn btn-sm btn-danger ml-auto desk-officer-remove-btn",
+    });
+    btRemove.text("x");
+    btRemove.data("id", deskOfficer.ain);
+    btRemove.attr("title", `Remove ${deskOfficer.displayName} from Selected Desk Officers`);
+    btRemove.click((e) => {
+      let stakeholderId = deskOfficer.ain;
+      selectedDeskOfficers = events.stakeholderRemoveBtnClickHandler(
+        selectedDeskOfficers,
+        stakeholderId,
+      );
+    });
+    listItem.append(btRemove);
+    list.append(listItem);
   }
-  return selectedDeskOfficers;
 }
 
 export function sendEmailToCollaborationStakeholders(checkEquiIdValue, savedCollaborationStakeholders) {
@@ -549,6 +571,7 @@ if (requestedDueDateRec !== "") {
   $("#requestedDueDateFld").trigger("change");
 }
 }
+
 export function proposedEngagementDateHandler() {
 var proposedEngagementDateRec = $("#proposedEngagementDate").val();
 if (proposedEngagementDateRec !== "") {

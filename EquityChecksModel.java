@@ -157,11 +157,20 @@ public class EquityChecksModel extends DomBaseModel {
         inverseJoinColumns = @JoinColumn(name = "CHILD ID", referencedColumnName = "ID")) 
     private Set<RefIdam> collaborationStakeholders; 
 
-    @ManyToMany(cascade = CascadeType.ALL) 
-    @JoinTable(name = "join_equity_checks_to_field_station_pocs_and_desk_officers", 
-        joinColumns = @JoinColumn(name = "PARENT.ID", referencedColumnName = "ID"), 
-        inverseJoinColumns = @JoinColumn(name = "CHILD ID", referencedColumnName = "ID")) 
-    private Set<RefIdam> fieldStationPOCsAndDeskOfficers; 
+    @OneToMany
+@JoinTable(name = "join_equity_checks_to_field_station_poc", 
+            joinColumns = @JoinColumn(name = "PARENT_ID", referencedColumnName = "ID"), 
+            inverseJoinColumns = @JoinColumn(name = "CHILD_ID", referencedColumnName = "ID"))
+// Set of RefIdam objects to store the field station POC list
+private Set<RefIdam> fieldStationPOCList = new HashSet<>();
+
+@OneToMany
+@JoinTable(name = "join_equity_checks_to_desk_officer", 
+            joinColumns = @JoinColumn(name = "PARENT_ID", referencedColumnName = "ID"), 
+            inverseJoinColumns = @JoinColumn(name = "CHILD_ID", referencedColumnName = "ID"))
+// Set of RefIdam objects to store the desk officer list
+private Set<RefIdam> deskOfficerList = new HashSet<>();
+
 
     @OneToOne(mappedBy = "equityCheck", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private EquityChecksSearchHelp equityChecksSearchHelp; 

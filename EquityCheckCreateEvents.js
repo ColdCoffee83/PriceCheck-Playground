@@ -1,4 +1,6 @@
 import * as functions from "./equityCheckCreateFunctions.¡s";
+import { TABLE_NAMES, LIST_NAMES, BUTTON_TITLES} from "./equityCheckCreateConstants.js";
+
 $("#isDraft").prop("checked", true);
 if ($("#justification").val() === "") {
   $("#justification").val("None");
@@ -34,7 +36,8 @@ export function submitBtnClickHandler() {
     form.find("button[type='submit']").removeAttr("disabled").click();
     return false;
   }
-  export function showStatusHistoryClickHandler(checkEquiIdValue) {
+  
+export function showStatusHistoryClickHandler(checkEquiIdValue) {
       const newOrder = ["Draft", "Submitted", "Received", "Processing", "In Coordination", "Completed"];
 
   $.ajax({
@@ -91,7 +94,7 @@ export function submitBtnClickHandler() {
       
       // Render the table using 'dialogUtil.showInfoNoForm' method
       dialogUtil.showInfoNoForm( "Status History", html, function() {
-        var statusHistoryTable = $("#statusHistoryTbl");
+        let statusHistoryTable = $(constants.TABLE_NAMES.StatusHistory);
         statusHistoryTable.DataTable({"dom": "t"});
           }
         );
@@ -99,7 +102,7 @@ export function submitBtnClickHandler() {
     });
   }
   
-  export function navbarClickHandler(initialState, isNavigationWarningEnabled, e) {
+export function navbarClickHandler(initialState, isNavigationWarningEnabled, e) {
     if (functions.isFormInInitialState(initialState) && !$("#isDraft").prop("checked")) {
       return true;
     }
@@ -116,8 +119,10 @@ export function submitBtnClickHandler() {
         return true;
       }
     }
+    
   }
-  export function cancelBtnClickHandler(initialState, isNavigationWarningEnabled) {
+
+export function cancelBtnClickHandler(initialState, isNavigationWarningEnabled) {
     if (functions.isFormInInitialState(initialState) && !$("#isDraft").prop("checked")) {
       functions.redirectToListLocation();
       return false;
@@ -141,7 +146,8 @@ export function submitBtnClickHandler() {
   
     return true;
   }
-  export function savesDraftBtnClickHandler() {
+
+export function savesDraftBtnClickHandler() {
     // disable required attribute for all fields
     const form = $("#equityCheckCreateForm");
     form.find("input[required]").prop("required", false);
@@ -165,7 +171,8 @@ export function submitBtnClickHandler() {
       }
     });
   }
-  export function sendCollaborationEmailBtnClickHandler(collaborationEmailSent) {
+  
+export function sendCollaborationEmailBtnClickHandler(collaborationEmailSent) {
     let confirmationMessage = "Are you sure you want to send the collaboration email to the listed recipients?";
     if (collaborationEmailSent) {
       confirmationMessage = "You have already sent a collaboration email. Are you sure you want to send it again?";
@@ -186,30 +193,42 @@ export function submitBtnClickHandler() {
 ) {
   let link = appContext + "/dialog/setUsers";
   let infoBoxTitle;
-  let dataTableFunction;
   let widthOfInfoBox = 1400;
+  let focusedTable;
+  let focusedList;
+  let itemType;
+  let removeBtn;
+  let saveBtn;
     
   switch (context) {
     case "FieldStationPOCs":
-      infoBoxTitle = "Select Field Station POCs";
-      // TODO: adapt setUpDataTable for Field Station POCs
-      dataTableFunction = setupDataTable;
+      infoBoxTitle = "Select Field Station POCs";      
+      focusedList = LIST_NAMES.FieldStationPOCs;
+      focusedTable = TABLE_NAMES.FieldStationPOCs;
+      removeBtn = BUTTON_TITLES.remove.FieldStationPOCs;
+      itemType = "field-station-item";
+      saveBtn = "#saveStakeholdersBtn";
       break;
     case "DeskOfficers":
       infoBoxTitle = "Select Desk Officers";
-      // TODO: adapt setUpDataTable for Desk Officers
-      dataTableFunction = setupDataTable;
+      focusedList = LIST_NAMES.DeskOfficers;
+      focusedTable = TABLE_NAMES.DeskOfficers;
+      removeBtn = BUTTON_TITLES.remove.DeskOfficers;
+      itemType = "desk-officer-item";
       break;
     case "CollaborationStakeholders":
-      infoBoxTitle = "Select Collaboration Stakeholders";
-      dataTableFunction = setupDataTable;      
+      infoBoxTitle = "Select Collaboration Stakeholders";   
+      focusedList = LIST_NAMES.CollaborationStakeholders;
+      focusedTable = TABLE_NAMES.CollaborationStakeholders;
+      removeBtn = BUTTON_TITLES.remove.CollaborationStakeholders; 
+      itemType = "stakeholder-item";
       break;
   }
 
   dialogUtil.showInfoNoForm(link, infoBoxTitle, function() {
     $(".personSearchField").on("keyup", function(e) {
       typeDelay(function() {
-        $("#searchCollaborationStakeholdersTbl")
+        $(focusedTable)
           .DataTable()
           .ajax.reload();
       }, 250);
@@ -217,12 +236,12 @@ export function submitBtnClickHandler() {
   });
 
   selectedItems = functions.populateSelectedListFromSavedList(selectedItems, savedItems);
-  $("#collabStakeholdersList").on("click", "stakeholderRemoveBtn", (e) => {
-    selectedItems = stakeholderRemoveBtnClickHandler(selectedItems, null);
+  $(focusedList).on("click", removeBtn, (e) => {
+    selectedItems = removeBtnClickHandler(selectedItems, null);
   });
 
   selectedItems = functions.populateSelectedListFromSavedList(selectedItems, savedItems);
-  functions.updateSelectedStakeholdersList(selectedItems);
+  functions.updateSelectedItemsList(selectedItems, focusedList, itemType);
   selectedItems = dataTableFunction(selectedItems);
   $("#saveStakeholdersBtn").on("click", (e) => {
     savedItems = saveStakeholdersBtnClickHandler(checkEquiIdValue, selectedItems, savedItems, widthOfInfoBox);
@@ -230,24 +249,25 @@ export function submitBtnClickHandler() {
 }
 
   
-  export function stakeholderRemoveBtnClickHandler(
-    selectedCollaborationStakeholders,
-    stakeholderId,
+  export function removeBtnClickHandler(
+    selectedPersons,
+    personId,
+    personsList,
     e,
   ) {
     e.preventDefault();
   
-    const ain = stakeholderId == null ? stakeholderId : $(this).data("id");
-    const index = selectedCollaborationStakeholders.findIndex(
+    const ain = personId == null ? personId : $(this).data("id");
+    const index = selectedPersons.findIndex(
       item => item.ain === ain,
     );
   
     if (index !== -1) {
-      selectedCollaborationStakeholders.splice(index, 1);
-      functions.updateSelectedStakeholdersList();
+      selectedPersons.splice(index, 1);
+      functions.updateSelectedItemsList(selectedPersons, "#collabStakeholdersList", "stakeholder-item");
   
       // update button text in DataTable
-      const table = $("#searchCollaborationStakeholdersTbl").DataTable();
+      const table = $(TABLE_NAMES.CollaborationStakeholders).DataTable();
       table.rows().every(function (row, dx, tableLoop, rowLoop) {
         const rowData = this.data();
   
@@ -262,79 +282,54 @@ export function submitBtnClickHandler() {
     return selectedCollaborationStakeholders;
   }
 
-  function setupDataTable(selectedItems, context) {
-  let tableName, addBtnTitle, removeBtnTitle;
-  switch (context) {
-    case "FieldStationPOCs":
-      tableName = "#searchFieldStationPOCsTbl";
-      addBtnTitle = "Select FieldStationPOC";
-      removeBtnTitle = "Remove FieldStationPOC";
-      break;
-    case "DeskOfficers":
-      tableName = "#searchDeskOfficersTbl";
-      addBtnTitle = "Select Desk Officer";
-      removeBtnTitle = "Remove Desk Officer";
-      break;
-    case "CollaborationStakeholders":
-      tableName = "#searchCollaborationStakeholdersTbl";
-      addBtnTitle = "Select Person";
-      removeBtnTitle = "Remove Person";
-      break;
-  }
-
-  $(tableName).DataTable({
+  function setupDataTable(selectedItems, context, appContext) {
+    const tableName = TABLE_NAMES[context];
+    const addBtnTitle = BUTTON_TITLES.add[context];
+    const removeBtnTitle = BUTTON_TITLES.remove[context];
+  
+    $(tableName).DataTable({
       columns: [
         { data: "displayName" },
         { data: "divOffice" },
-        data: function(row, type, val, meta) {
-      return (
-        "<button type='button' data-id='" +
-        row.ain +
-        "' data-sphone='" +
-        row.securePhone +
-        "' data-displayname='" +
-        row.displayName +
-        "' data-org='" +
-        row.divOffice +
-        "' class='selPersonBtns btn btn-primary btn-small' title='Add " +
-        row.displayName +
-        " to Selection'>" +
-        addBtnTitle +
-        "</button>"
-      );
-    },
+        {
+          data: function(row) {
+            return `<button type='button' data-id='${row.ain}' data-sphone='${row.securePhone}' data-displayname='${row.displayName}' data-org='${row.divOffice}' class='selPersonBtns btn btn-primary btn-small' title='Add ${row.displayName} to Selection'>${addBtnTitle}</button>`;
+          }
+        }],
         ajax: {
           url: appContext + "/ajax/peopleLookup/name",
           type: "GET",
           data: function (d) {
-            d.firstName = $("#collabFirstNameSearch").val();
-            d.lastName = $("#collabLastNameSearch").val();
+            d.firstName = $("#firstNameSearch").val();
+            d.lastName = $("#lastNameSearch").val();
           },
+          error: function(err) {
+            console.log(err);
+          }
         },
         drawCallback: function () {
-          // updates button text based on presence of stakeholder in selected list
+          const updateButtonText = (table, selectedItems) => {
+            table.rows().every(function(rowIds, tableLoop, rowLoop) {
+              const rowData = this.data();
+              const ain = parseInt(rowData["ain"]);
+              const index = selectedItems.findIndex(item => item.ain === ain);
+              const button = this.nodes().to$().find("button");
+              if (index !== -1) {
+                button.text(removeBtnTitle);
+              } else {
+                button.text(addBtnTitle);
+              }
+            });
+          };
           const table = $(tableName).DataTable();
-          table.rows().every(function(rowIds, tableLoop, rowLoop) {
-          const rowData = this.data();
-          const ain = parseInt(rowData["ain"]);
-  
-          const index = selectedItems.findIndex(item => item.ain === ain);
-  
-          const button = this.nodes().to$().find("button");
-  
-          if (index !== -1) {
-            button.text(removeBtnTitle);
-          } else {
-            button.text(addBtnTitle);
-          }
-        });
-      },
-      paging: false,
-      searching: false,
+          updateButtonText(table, selectedItems);
+        },
+        paging: false,
+        searching: false,
       });
-  
-      return selectedItems;
-    }
+    return selectedItems;
+  }
+
   
   function saveStakeholdersBtnClickHandler(
     checkEquiIdValue,

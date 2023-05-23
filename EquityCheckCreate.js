@@ -48,17 +48,17 @@ functions.updateSelectedTable(checkEquiIdValue, "DeskOfficers").then(function(da
 });
 
    
-  // Check collaboration email status
   async function checkCollaborationEmailStatus() {
-  try {
-    collaborationEmailSent = await functions.fetchCollaborationEmailStatus(checkEquiIdValue);
-  } catch (error) {
-    console.error("Error checking collaboration email status:", error);
-  }
-    return collaborationEmailSent;
+    try {
+      collaborationEmailSent = await functions.fetchCollaborationEmailStatus(checkEquiIdValue);
+    } catch (error) {
+      console.error("Error checking collaboration email status:", error);
+    }
+      return collaborationEmailSent;
   }
   
    checkCollaborationEmailStatus();
+
    // Handle navigation bar click
   $(".navbar a").on("click", (e) => {
     isNavigationWarningEnabled = events.navbarClickHandler(
@@ -66,6 +66,7 @@ functions.updateSelectedTable(checkEquiIdValue, "DeskOfficers").then(function(da
       isNavigationWarningEnabled
     );
   });
+
    // Handle cancel button click
   $("button.cancelBtn").on("click", () => {
     isNavigationWarningEnabled = events.cancelBtnClickHandler(
@@ -73,29 +74,23 @@ functions.updateSelectedTable(checkEquiIdValue, "DeskOfficers").then(function(da
       isNavigationWarningEnabled
     );
   });
+
    // Handle save as draft button click
   $("button.saveAsDraftBtn").unbind().click(() => {
     isNavigationWarningEnabled = events.saveAsDraftBtnClickHandler();
   });
+
    // Handle submit button click
   $(".submitBtn").unbind().click(() => {
     isNavigationWarningEnabled = events.submitBtnClickHandler();
   });
-   // Handle internal due date change
+
   functions.internalDueDateHandler(internlDueDateRec);
-   // Handle requested due date change
   functions.requestedDueDateHandler(requestedDueDateRec);
-   // Handle proposed engagement date change
-  functions.proposedEngagementDatehandler();
-   // Handle office POC self assign
+  functions.proposedEngagementDateHandler();
   functions.setupOfficePOC_SelfAssign();
-   // Handle action POC self assign
   functions.setupActionPOC_SelfAssign();
-   // Handle office POC assign
-  functions.setupOfficePOC();
-   // Handle action POC assign
   functions.setupActionPOC();
-   // Show/hide elements based on status
   functions.showHideElementsBasedOnStatus();
      
 // handle clicking on add field station POC button
