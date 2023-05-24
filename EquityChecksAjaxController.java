@@ -37,7 +37,7 @@ public class EquityChecksAjaxController extends DomBaseController {
   }
    @RequestMapping(value = "/load", method = RequestMethod.POST)
   @ResponseBody
-  public DomAjaxListTableData load(HttpServletReguest request, EquityChecksSearch equityChecksSearch) {
+  public DomAjaxListTableData load(HttpServletRequest request, EquityChecksSearch equityChecksSearch) {
     LatteUser latteUser = getLatteUser(request);
     if (!domUserAccessService.hasAnyRole(latteUser)) {
       return actionService.filterNoAccess(latteUser);
@@ -88,6 +88,19 @@ public class EquityChecksAjaxController extends DomBaseController {
     List<String> selectedCollaborationStakeholders = equityChecksService.getSelectedCollaborationStakeholders(equityCheckId);
     return selectedCollaborationStakeholders;
   }
+  // get FieldStationPOCs
+  @GetMapping("/getFieldStationPOCs")
+  public List<String> getFieldStationPOCs(@RequestParam Long equityCheckId) {
+    List<String> fieldStationPOCs = equityChecksService.getFieldStationPOCs(equityCheckId);
+    return fieldStationPOCs;
+  }
+  // get DeskOfficers
+  @GetMapping("/getDeskOfficers")
+  public List<String> getDeskOfficers(@RequestParam Long equityCheckId) {
+    List<String> deskOfficers = equityChecksService.getDeskOfficers(equityCheckId);
+    return deskOfficers;
+  }
+  
    @PostMapping("/sendEmailToCollaborationStakeholders/{equityCheckId}")
   public AjaxResponse sendEmailToCollaborationStakeholders(HttpServletRequest request,
     @PathVariable Long equityCheckId, @RequestBody List<String> stakeholders) throws AddressException, IOException, MessagingException {

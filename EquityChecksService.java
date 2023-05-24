@@ -530,12 +530,34 @@ String status) throws AddressException, IOException, MessagingException {
         insertOrUpdateEquityCheck (equityCheck, latteUser, false);
     }
 
+    public void setFieldStationPOCs (EquityChecksModel equityCheck, Set<RefIdam> fieldStationPOCs, LatteUser latteUser) {
+      equityCheck.setFieldStationPOCs (fieldStationPOCs);
+      insertOrUpdateEquityCheck (equityCheck, latteUser, false);
+    }
+
+    public void setDeskOfficers (EquityChecksModel equityCheck, Set<RefIdam> deskOfficers, LatteUser latteUser) {
+      equityCheck.setDeskOfficers (deskOfficers);
+      insertOrUpdateEquityCheck (equityCheck, latteUser, false);
+    }
+
     public List<String> getSelectedCollaborationStakeholders (Long equityCheckId) {
         List<String> stakeholders =
         equityChecksRepository.getSelectedCollaborationStakeholders (equityCheckId);
         return stakeholders;
     }
 
+  public List<String> getSelectedFieldStationPOCs (Long equityCheckId) {
+    List<String> pocs =
+    equityChecksRepository.getSelectedFieldStationPOCs (equityCheckId);
+    return pocs;
+  }
+
+  public List<String> getSelectedDeskOfficers (Long equityCheckId) {
+    List<String> officers =
+    equityChecksRepository.getSelectedDeskOfficers (equityCheckId);
+    return officers;
+  }
+  
     public Boolean sendEmailToCollaborationStakeholders (List<String> stakeholders, Long equityCheckId,
         LatteUser latteUser) throws AddressException, IOException, MessagingException {
         List<String> emailAddresses = stakeholders.stream().map(stakeholder -> stakeholder + "@cia.ic.gov").collect(Collectors.toList());

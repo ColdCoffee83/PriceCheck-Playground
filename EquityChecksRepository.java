@@ -22,8 +22,20 @@ public interface EquityChecksRepository extends RevisionRepository<EquityChecksM
      @Query("select count (r) from EquityChecksModel r where r.id = :id and r.insertUserName = :username")
     Integer checkOwnership(@Param("username") String username, @Param("id") Long id);
      @Query(value = "select r.ain, r.display name, r.organization from ref idam r " +
-            "JOIN join_equity checks_to_collaboration_stakeholder a " +
+            "JOIN join_equity_checks_to_collaboration_stakeholder a " +
             "ON r.id = j.CHILD_ID " +
             "WHERE j.PARENT ID = :parent_id", nativeQuery = true)
     List<String> getSelectedCollaborationStakeholders(@Param("parent id") Long equityCheckId);
+  // query for getting selected fieldStationPOCs
+     @Query(value = "select r.ain, r.display name, r.organization from ref idam r " +
+            "JOIN join_equity_checks_to_field_station_POC a " +
+            "ON r.id = j.CHILD_ID " +
+            "WHERE j.PARENT ID = :parent_id", nativeQuery = true)
+  List<String> getSelectedFieldStationPOCs(@Param("parent id") Long equityCheckId);
+  // query for getting selected deskOfficers
+  @Query(value = "select r.ain, r.display name, r.organization from ref idam r " +
+            "JOIN join_equity_checks_to_desk_officer a " +
+            "ON r.id = j.CHILD_ID " +
+            "WHERE j.PARENT ID = :parent_id", nativeQuery = true)
+  List<String> getSelectedDeskOfficers(@Param("parent id") Long equityCheckId);
 }
